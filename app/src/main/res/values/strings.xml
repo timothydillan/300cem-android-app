@@ -1,3 +1,4 @@
 <resources>
-    <string name="app_name">Circles</string>
+    <string name="app_name">circles</string>
+    <string name="logo_description">The logo of the app</string>
 </resources>
