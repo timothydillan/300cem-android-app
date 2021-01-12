@@ -8,8 +8,6 @@ import android.os.Handler;
 
 public class SplashActivity extends AppCompatActivity {
 
-    private static final int SPLASH_SCREEN_DURATION = 3000;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -19,10 +17,11 @@ public class SplashActivity extends AppCompatActivity {
         // Causes the Runnable r to be added to the message queue, to be run after the specified amount of time elapses.
         // In here, we override the run method that belongs to the Runnable object and instead load the Main Activity
         // after 3 seconds.
+        final int SPLASH_SCREEN_DURATION = 3000;
         new Handler().postDelayed(new Runnable() {
             @Override
             public void run() {
-                Intent mainActivity = new Intent(SplashActivity.this, MainActivity.class);
+                Intent mainActivity = new Intent(SplashActivity.this, SignUpActivity.class);
                 startActivity(mainActivity);
                 finish();
             }

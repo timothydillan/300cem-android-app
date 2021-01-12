@@ -1,4 +1,8 @@
 <resources>
     <string name="app_name">circles</string>
     <string name="logo_description">The logo of the app</string>
+    <string name="welcome_text">Welcome to Circles</string>
+    <string name="login_text">Have an account? <font color='#1861CE'>Log In</font></string>
+    <string name="signup_text">Don\'t have an account? <font color='#1861CE'>Sign Up</font></string>
+    <string name="signup_button">Create an Account</string>
 </resources>

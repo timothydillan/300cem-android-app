@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:341514827824:android:8fce9bcca8f46d5a0815f5",
+        "mobilesdk_app_id": "1:341514827824:android:637daf15c4171c2a0815f5",
         "android_client_info": {
-          "package_name": "com.timothy.circles"
+          "package_name": "com.timothydillan.circles"
         }
       },
       "oauth_client": [
