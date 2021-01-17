@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "341514827824",
+    "firebase_url": "https://circles-f0a93-default-rtdb.firebaseio.com",
     "project_id": "circles-f0a93",
     "storage_bucket": "circles-f0a93.appspot.com"
   },
@@ -13,6 +14,14 @@
         }
       },
       "oauth_client": [
+        {
+          "client_id": "341514827824-33ctkf1hm7uih7f2npbnvqqfpp1tjrut.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.timothydillan.circles",
+            "certificate_hash": "bf9423f501f9e02db16ed189430308ebe88620a4"
+          }
+        },
         {
           "client_id": "341514827824-pi2ftfo2ihmu6fduc3jsmrlvojjtdkkl.apps.googleusercontent.com",
           "client_type": 3

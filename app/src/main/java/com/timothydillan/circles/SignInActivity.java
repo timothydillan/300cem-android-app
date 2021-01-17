@@ -17,7 +17,7 @@ import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 
-public class SignInActivity extends AppCompatActivity implements ActivityInterface {
+public class SignInActivity extends ActivityInterface {
 
     private final String TAG = "FIREBASE_AUTH";
     private TextInputLayout emailInput, passwordInput;
@@ -95,13 +95,6 @@ public class SignInActivity extends AppCompatActivity implements ActivityInterfa
     public void onTextClick(View v) {
         Intent signUpActivity = new Intent(SignInActivity.this, SignUpActivity.class);
         startActivity(signUpActivity);
-        finish();
-    }
-
-    @Override
-    public void goToMainActivity() {
-        Intent mainActivity = new Intent(SignInActivity.this, MainActivity.class);
-        startActivity(mainActivity);
         finish();
     }
 
