@@ -1,0 +1,62 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    tools:context=".CircleMembersActivity">
+
+    <TextView
+        android:layout_marginTop="230dp"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginStart="@dimen/margin_left"
+        android:layout_marginEnd="@dimen/margin_right"
+        android:text="Share this invite code to the people you want to join your circle."
+        android:textColor="@color/primary_text"
+        android:textSize="24sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:id="@+id/circleInviteCode"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginStart="@dimen/margin_left"
+        android:layout_marginEnd="@dimen/margin_right"
+        android:text="Loading.."
+        android:textColor="@color/teal_700"
+        android:layout_marginTop="@dimen/margin_top"
+        android:textStyle="bold"
+        android:textSize="36sp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:layout_marginTop="@dimen/margin_top"
+        android:text="Lorem ipsum dolor sit amet share your code."
+        android:textColor="@color/primary_text"
+        android:textSize="14sp" />
+
+
+    <Button
+        android:id="@+id/shareButton"
+        style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+        android:layout_width="100dp"
+        android:layout_gravity="center"
+        android:layout_height="50dp"
+        android:layout_marginStart="@dimen/margin_left"
+        android:layout_marginEnd="@dimen/margin_right"
+        android:layout_marginTop="@dimen/margin_top"
+        android:textColor="@color/white"
+        android:onClick="onShareButtonClick"
+        android:backgroundTint="#1342BB"
+        android:text="Share"
+        android:textAllCaps="false"
+        android:textSize="16sp"
+        app:cornerRadius="20dp" />
+
+</LinearLayout>
