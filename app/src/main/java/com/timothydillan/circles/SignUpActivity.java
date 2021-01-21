@@ -76,10 +76,16 @@ public class SignUpActivity extends ActivityInterface {
                         int circleCode = new Random().nextInt(999999);
 
                         // Create new circle with user's uid and him/her being an admin
-                        Circle newCircle = new Circle(currentUser.getUid(), "Admin");
+                        Circle newCircle = new Circle("Admin");
 
                         // Create a new user with the current session being on the current circle
-                        User newUser = new User(firstName, lastName, email, phone, circleCode);
+                        User newUser = new User(currentUser.getUid(), firstName, lastName, email, phone, circleCode);
+
+                        FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
+                                .child("name").setValue(firstName + "'s Circle");
+
+                        FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
+                                .child("Members").child(currentUser.getUid()).setValue(newCircle);
 
                         // Add user details to the database
                         FirebaseDatabase.getInstance().getReference("Users").child(currentUser.getUid())
@@ -90,10 +96,6 @@ public class SignUpActivity extends ActivityInterface {
                                     Log.d(TAG, "addDataToDatabase:success");
                                     Toast.makeText(SignUpActivity.this, "Successfully created an account.",
                                             Toast.LENGTH_SHORT).show();
-
-                                    // Actually create the circle in the database and set the user as an admin for the circle
-                                    FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
-                                            .child("Members").setValue(newCircle);
 
                                     goToMainActivity();
                                 } else {
