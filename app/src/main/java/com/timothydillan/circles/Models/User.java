@@ -1,5 +1,10 @@
 package com.timothydillan.circles.Models;
 
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Calendar;
+import java.util.Date;
+
 public class User {
     public String uid;
     public String firstName;
@@ -9,6 +14,7 @@ public class User {
     public int currentCircleSession;
     public double latitude;
     public double longitude;
+    public String lastSharingTime;
 
     public User() {
 
@@ -21,6 +27,16 @@ public class User {
         this.email = email;
         this.phone = phone;
         this.currentCircleSession = currentCircleSession;
+        this.lastSharingTime = getCurrentDateAndTime();
+    }
+
+    public String getLastSharingTime() { return lastSharingTime; }
+
+    public void updateLastSharingTime() { this.lastSharingTime = getCurrentDateAndTime(); }
+
+    public String getCurrentDateAndTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
+        return dateFormat.format(new Date());
     }
 
     public String getFullName() {return firstName + " " + lastName;}
