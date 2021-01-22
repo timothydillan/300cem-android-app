@@ -18,6 +18,7 @@ import com.timothydillan.circles.Models.ItemModel;
 public class SettingsFragment extends Fragment {
 
     /* TODO:
+    1. Don't use RecyclerView but ListView instead.
     2. Show invite code
     3. Modify circle name
     4. Circle management
