@@ -15,7 +15,10 @@
         android:contentDescription="You can moods!"
         />
 
-    <item android:id="@+id/placeholder" android:title=""/>
+    <item
+        android:id="@+id/placeholder"
+        android:title=""
+        android:icon="@drawable/ic_baseline_add_circle_24"/>
 
     <item
         android:id="@+id/safety"
