@@ -8,7 +8,7 @@
     app:behavior_peekHeight="230dp"
     app:layout_behavior="com.google.android.material.bottomsheet.BottomSheetBehavior"
     android:background="@drawable/circular_linear_layout"
-    android:layout_height="wrap_content">
+    android:layout_height="match_parent">
 
     <ImageView
         android:layout_width="wrap_content"

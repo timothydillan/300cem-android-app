@@ -32,6 +32,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.timothydillan.circles.Adapters.CMemberRecyclerAdapter;
+import com.timothydillan.circles.Models.Circle;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.Utils.CircleUtil;
 
@@ -46,6 +47,7 @@ import static android.content.Context.LOCATION_SERVICE;
 public class MapsFragment extends Fragment {
 
     private static final LatLng singaporeCoordinates = new LatLng(1.290270, 103.851959);
+    protected static final String KEY_UID = "keyUid";
 
     private LinearLayout mBottomSheet;
     private BottomSheetBehavior mBottomSheetBehavior;
@@ -63,7 +65,7 @@ public class MapsFragment extends Fragment {
     private DatabaseReference databaseReference;
     private FirebaseUser currentUser;
 
-    private static final HashMap<Marker, User> membersLocation = new HashMap<>();
+    private static final HashMap<User, Marker> membersLocation = new HashMap<>();
 
     /* TODO:
     3. Marker with member PFP. (needs custom marker and usr img)
@@ -98,7 +100,7 @@ public class MapsFragment extends Fragment {
                     initializeCircleMarkers(members);
                     setUpRecyclerView(circleMemberView, members, circleMemberListener);
                     mBottomSheetBehavior.setHideable(false);
-                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_EXPANDED);
+                    mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
                 @Override
                 public void onCircleChange() {
@@ -150,8 +152,25 @@ public class MapsFragment extends Fragment {
         mBottomSheetBehavior.setHideable(true);
         mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
 
-        // TODO: no. 5
         circleMemberListener = (v, position) -> {
+            /*Options:
+            1. When member clicks on member, it shows a full profile of that member
+            Intent intent = new Intent(getActivity(), CircleMembersActivity.class);
+            intent.putExtra(KEY_UID, circleUtil.getCircleMembers().get(position).getUid());
+            startActivity(intent);
+            2. No.5
+            User member = circleUtil.getCircleMembers().get(position);
+            LatLng memberPosition = membersLocation.get(member).getPosition();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberPosition, 16.0f));
+            3. No.5 and EXTRA
+            ArrayList<User> memberList = new ArrayList<>();
+            User member = circleUtil.getCircleMembers().get(position);
+            LatLng memberPosition = membersLocation.get(member).getPosition();
+            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberPosition, 16.0f));
+            memberList.add(member)
+            // Only show the memebr
+            setUpRecyclerView(circleMemberView, memberList, circleMemberListener);
+            */
             Intent intent = new Intent(getActivity(), CircleMembersActivity.class);
             startActivity(intent);
         };
@@ -188,7 +207,7 @@ public class MapsFragment extends Fragment {
             // Animate/move the camera to the current member being iterated with a zoom of 15
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberLocation, 15.0f));
             // and put it into the hashmap.
-            membersLocation.put(memberMarker, circleMember);
+            membersLocation.put(circleMember, memberMarker);
         }
     }
 
@@ -204,10 +223,10 @@ public class MapsFragment extends Fragment {
         // For each of the data received,
         for (DataSnapshot ds : snapshot.getChildren()) {
             // and for every member in the circle
-            for (Map.Entry<Marker, User> circleMembers : membersLocation.entrySet()) {
+            for (Map.Entry<User, Marker> circleMembers : membersLocation.entrySet()) {
                 // Get their current marker and user details
-                Marker currentMemberMarker = circleMembers.getKey();
-                User currentCircleMember = circleMembers.getValue();
+                Marker currentMemberMarker = circleMembers.getValue();
+                User currentCircleMember = circleMembers.getKey();
                 // Get the user that's the same as the current member ID
                 if (ds.getKey().equals(currentCircleMember.getUid())) {
                     LatLng dbLocation = new LatLng(ds.child("latitude").getValue(Double.class), ds.child("longitude").getValue(Double.class));
