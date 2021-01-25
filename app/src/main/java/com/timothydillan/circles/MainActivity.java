@@ -2,9 +2,13 @@ package com.timothydillan.circles;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
+
+import android.Manifest;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.view.View;
+
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
 
@@ -15,8 +19,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Make sure these location permissions are enabled by the user.
+        requestPermissions(new String[]{
+                        Manifest.permission.ACCESS_FINE_LOCATION,
+                        Manifest.permission.ACCESS_COARSE_LOCATION,
+                        Manifest.permission.ACCESS_BACKGROUND_LOCATION},
+                PackageManager.PERMISSION_GRANTED);
+
         final BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        //bottomNavigationView.getMenu().getItem(2).setEnabled(false);
         bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
         getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new MapsFragment()).commit();
     }
@@ -25,7 +35,6 @@ public class MainActivity extends AppCompatActivity {
             item -> {
                 Fragment currentFragment = new MapsFragment();
                 int itemId = item.getItemId();
-                // Using if else instead since it is recommended to use it this way as resource IDs won't be fixed.
                 if (itemId == R.id.location) {
                     currentFragment = new MapsFragment();
                 } else if (itemId == R.id.mood) {

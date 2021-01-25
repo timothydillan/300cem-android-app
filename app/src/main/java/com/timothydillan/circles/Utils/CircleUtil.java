@@ -5,7 +5,6 @@ import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import com.google.android.gms.maps.model.Marker;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.ChildEventListener;
@@ -17,26 +16,17 @@ import com.google.firebase.database.ValueEventListener;
 import com.timothydillan.circles.Models.User;
 
 import java.util.ArrayList;
-import java.util.Map;
 
 public class CircleUtil {
-    private CircleUtilListener listener;
 
-    // Make these static as they need to be shared for all instances using it.
+    private CircleUtilListener listener;
+    // Need to make these static as they need to be shared for all instances using it.
     private static final String FIREBASE_TAG = "circleUtility";
-    private static final DatabaseReference databaseReference = FirebaseDatabase.getInstance().getReference();
+    private static final DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+            .getReference();
     private static final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
     private static final ArrayList<User> circleMembers = new ArrayList<>();
     private static User currentMember;
-
-    public CircleUtil() {
-        this.listener = null;
-        circleInitialization();
-    }
-
-    public void addCircleListener(CircleUtilListener listener) {
-        this.listener = listener;
-    }
 
     public CircleUtil(CircleUtilListener listener) {
         // If a class provides the listener immediately on construct,
@@ -46,7 +36,6 @@ public class CircleUtil {
         if (currentMember != null && !circleMembers.isEmpty()) {
             // If they're not, first remove all duplicate members from the circlemembers array list
             // this is a weird bug that I haven't found a fix for yet.
-            // TODO: find why circlemembers keep on adding even though the retrieveCircleMembers func is not called.
             removeDuplicateMembers();
             // then trigger the onCircleReady event
             this.listener.onCircleReady(circleMembers);
@@ -68,6 +57,7 @@ public class CircleUtil {
                 // we need to get the UID of each member in the circle that the user is currently in.
                 retrieveCircleMemberUid();
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.w(FIREBASE_TAG, "circleInitialization:failure", error.toException());
@@ -76,39 +66,43 @@ public class CircleUtil {
     }
 
     private void retrieveCircleMemberUid() {
-        /* Retrieves all UIDs listed in a circle. TODO: DO THIS STYLE OF COMMENTING FOR OTHER FUNCTIONS.
-        * Args:
-        *   none
-        * Returns:
-        *   none
-        * Description:
-        *   Calling this function will trigger an event listener that listens/gets data
-        *   one time from the Circles table/node, specifically the user's current circle node.
-        *   The data retrieved is the UID of each member registered inside the circle.
-        *   After retrieving the data, the retrieveCircleMembers function will be called. */
+        /* Retrieves all member UIDs listed in a circle.
+         * Args:
+         *   none
+         * Returns:
+         *   none
+         * Description:
+         *   Calling this function will trigger an event listener that listens/gets data
+         *   once from the Circles table/node, specifically the user's current circle node.
+         *   After each member's UID is retrieved and stored in the array list,
+         *   the retrieveCircleMembers function will be called. */
 
-        // Declare an array that will store every member's UID.
         final ArrayList<String> circleMemberUidList = new ArrayList<>();
 
-        // Create a single value event listener that returns the member list of the current user's circle
-        databaseReference.child("Circles").child(String.valueOf(currentMember.getCurrentCircleSession()))
+        // Get each member's UID in the circle that the user is currently in.
+        databaseReference.child("Circles")
+                .child(String.valueOf(currentMember.getCurrentCircleSession()))
                 .child("Members")
                 .addListenerForSingleValueEvent(new ValueEventListener() {
                     @Override
                     public void onDataChange(@NonNull DataSnapshot snapshot) {
-                        // If we received the data
                         for (DataSnapshot ds : snapshot.getChildren()) {
-                            // we'll skip the user's UID because we've added him/her to the list.
-                            if (ds.getKey().equals(currentMember.getUid()))
+                            // No need to get the user's UID because he/she has been added
+                            // into the list.
+                            if (ds.getKey().equals(currentMember.getUid())) {
                                 continue;
+                            }
                             Log.d(FIREBASE_TAG, "Adding member UID into list.");
-                            // and we'll add every other member into the uid list array.
+                            // we'll add every other member into the uid list array.
                             circleMemberUidList.add(ds.getKey());
                         }
-                        // Once we're done, call the retrieveCircleMembers function and pass the circleMemberUidList.
-                        Log.d(FIREBASE_TAG, "Finished adding every member's uid into list. Getting member details.");
+                        // Once all the data has been retrieved, each member's detail will now be
+                        // retrieved.
+                        Log.d(FIREBASE_TAG,
+                                "Finished adding every member's uid into list. Getting member details.");
                         retrieveCircleMembers(circleMemberUidList);
                     }
+
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         Log.w(FIREBASE_TAG, "getCircleMemberUid:failure", error.toException());
@@ -117,35 +111,30 @@ public class CircleUtil {
     }
 
     private void retrieveCircleMembers(ArrayList<String> circleMemberUidList) {
-        // First check whether the uid list retrieved is empty or not.
-        if (circleMemberUidList.isEmpty())
-            return;
-
-        // If it's not, read the Users node once
+        // Read the Users node once
         databaseReference.child("Users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
-                // get the children (aka the UID listed in the users node)
+                // get every key (UID) listed in the Users node
                 for (DataSnapshot ds : snapshot.getChildren()) {
-                    // If the uid retrieved is the same in the current uid being iterated
                     for (String uid : circleMemberUidList) {
+                        // If the uid retrieved is the same in the current uid being iterated
                         if (ds.getKey().equals(uid)) {
                             // Get the user details and store it into a variable
                             User circleMember = ds.getValue(User.class);
-                            assert circleMember != null;
                             circleMembers.add(circleMember);
                             Log.d(FIREBASE_TAG, "Retrieved " + circleMember.getFirstName() + "'s details.");
                         }
                     }
                 }
                 // Once we're done with this, run a continuous event listener that updates each member's details.
-                assert listener != null;
                 listener.onCircleReady(circleMembers);
                 Log.d(FIREBASE_TAG, "Circle initialization done. Running update circle function.");
                 updateCircle();
                 Log.d(FIREBASE_TAG, "Running update users function.");
                 updateUsers();
             }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.w(FIREBASE_TAG, "getCircleMembers:failure", error.toException());
@@ -159,14 +148,16 @@ public class CircleUtil {
         databaseReference.child("Circles").child(String.valueOf(currentMember
                 .getCurrentCircleSession())).addChildEventListener(new ChildEventListener() {
             @Override
-            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {  }
+            public void onChildAdded(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+            }
+
             @Override
-            public void onChildChanged(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+            public void onChildChanged(@NonNull DataSnapshot snapshot,
+                                       @Nullable String previousChildName) {
                 // if it does,
                 Log.d(FIREBASE_TAG, "Something has changed within the circle with the code: " +
                         currentMember.getCurrentCircleSession() + ".");
-                Log.d(FIREBASE_TAG, "Calling onCircleChange, resetting circle, and re-initializing.");
-                assert listener != null;
+                Log.d(FIREBASE_TAG, "Calling onCircleChange, resetting and re-initializing circle.");
                 // trigger the onCircleChange event.
                 listener.onCircleChange();
                 // reset the circle (reset the data)
@@ -174,10 +165,15 @@ public class CircleUtil {
                 // and re-initialize the circle.
                 circleInitialization();
             }
+
             @Override
-            public void onChildRemoved(@NonNull DataSnapshot snapshot) {   }
+            public void onChildRemoved(@NonNull DataSnapshot snapshot) {
+            }
+
             @Override
-            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) { }
+            public void onChildMoved(@NonNull DataSnapshot snapshot, @Nullable String previousChildName) {
+            }
+
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
                 Log.w(FIREBASE_TAG, "updateCircle:failure", error.toException());
@@ -192,7 +188,6 @@ public class CircleUtil {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
                 Log.d(FIREBASE_TAG, "Something has changed within the users group.");
-                assert listener != null;
                 // If it did, trigger the onUsersChange event.
                 listener.onUsersChange(snapshot);
             }
@@ -206,15 +201,19 @@ public class CircleUtil {
 
     private void removeDuplicateMembers() {
         ArrayList<User> noDuplicates = new ArrayList<>();
-        // Linear scan to check whether there are any duplicates
+        // For every member in the circleMembers array,
         for (User member : circleMembers) {
-            if (noDuplicates.contains(member))
+            // check if the member has already been added unto the noDuplicates list.
+            // if the member has already been added, continue to the next iteration.
+            if (noDuplicates.contains(member)) {
                 continue;
+            }
+            // if not, add the member into the noDuplicates list.
             noDuplicates.add(member);
         }
-        // Clear the array list
+        // Once the operation above is done, clear the circleMembers list
         circleMembers.clear();
-        // and add the new list without duplicates.
+        // and add the content from the list that has no duplicates unto the circleMembers list.
         circleMembers.addAll(noDuplicates);
     }
 
@@ -223,7 +222,7 @@ public class CircleUtil {
         currentMember = null;
     }
 
-    private ArrayList<User> getCircleMembers() {
+    public ArrayList<User> getCircleMembers() {
         return circleMembers;
     }
 
@@ -233,7 +232,9 @@ public class CircleUtil {
 
     public interface CircleUtilListener {
         void onCircleReady(ArrayList<User> members);
+
         void onCircleChange();
+
         void onUsersChange(@NonNull DataSnapshot snapshot);
     }
 

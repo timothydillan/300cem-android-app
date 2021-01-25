@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
+import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -18,17 +19,25 @@ import com.timothydillan.circles.Models.ItemModel;
 public class SettingsFragment extends Fragment {
 
     /* TODO:
-    1. Don't use RecyclerView but ListView instead.
-    2. Show invite code
-    3. Modify circle name
-    4. Circle management
-    5. Other settings, account, privacy, blabla
+    1. Circle related configurations:
+        1. Edit Circle Name
+        2. Remove Circle
+        3. Circle Members
+        4. Circle Places (Geo-fencing, notifications)
+    2. Account Configuration
+        1. Edit Details (PFP)
+        2. Remove Account -> delete circle and also data in db
+        3. Notifications
+    3. Privacy & Security
+        1. Password/Fingerprint/FaceID
+        2. Terms & Conditions
+        3. Privacy Policy
     */
+
     private final ItemModel circleConfigItemList = new ItemModel();
     private final ItemModel accountConfigItemList = new ItemModel();
     private final ItemModel privacyConfigItemList = new ItemModel();
 
-    private RecyclerView circleConfigView, accountConfigView, privacyConfigView;
     private RecyclerAdapter.RecyclerViewClickListener circleConfigListener, accountConfigListener, privacyConfigListener;
 
     @Override
@@ -44,6 +53,9 @@ public class SettingsFragment extends Fragment {
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getActivity());
         recyclerView.setLayoutManager(layoutManager);
         recyclerView.setItemAnimator(new DefaultItemAnimator());
+        DividerItemDecoration mDividerItemDecoration = new DividerItemDecoration(recyclerView.getContext(),
+                DividerItemDecoration.VERTICAL);
+        recyclerView.addItemDecoration(mDividerItemDecoration);
         recyclerView.setAdapter(adapter);
     }
 
@@ -93,9 +105,9 @@ public class SettingsFragment extends Fragment {
                              Bundle savedInstanceState) {
         // Inflate the layout for this fragment
         View rootView = inflater.inflate(R.layout.fragment_settings, container, false);
-        circleConfigView = rootView.findViewById(R.id.circleConfigurations);
-        accountConfigView = rootView.findViewById(R.id.accountConfigurations);
-        privacyConfigView = rootView.findViewById(R.id.privacyConfigurations);
+        RecyclerView circleConfigView = rootView.findViewById(R.id.circleConfigurations);
+        RecyclerView accountConfigView = rootView.findViewById(R.id.accountConfigurations);
+        RecyclerView privacyConfigView = rootView.findViewById(R.id.privacyConfigurations);
 
         setCircleOnClickListener();
         setUpRecyclerView(circleConfigView, circleConfigItemList, circleConfigListener);
