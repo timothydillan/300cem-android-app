@@ -1,14 +1,187 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.core.widget.NestedScrollView xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:fillViewport="true"
     tools:context=".SafetyFragment">
 
-    <!-- TODO: Update blank fragment layout -->
-    <TextView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:text="@string/hello_blank_fragment" />
+        android:layout_height="wrap_content"
+        android:layout_marginStart="30dp"
+        android:layout_marginEnd="@dimen/margin_right"
+        android:orientation="vertical">
 
-</FrameLayout>
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="16dp"
+            android:fontFamily="sans-serif-medium"
+            android:text="Safety"
+            android:textColor="@color/primary_text"
+            android:textSize="48sp" />
+
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="8dp"
+            android:fontFamily="sans-serif-light"
+            android:text="Take a look at ways you can help protect you and your circle."
+            android:textColor="@color/primary_text"
+            android:textSize="16sp" />
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top"
+            android:layout_marginEnd="@dimen/margin_right"
+            app:cardBackgroundColor="#EB5758"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="@dimen/margin_top"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="SOS"
+                    android:textColor="@color/white"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="@dimen/margin_right"
+                    android:fontFamily="sans-serif-light"
+                    android:lineSpacingExtra="3dp"
+                    android:text="Trigger circle notifications and call the nearest emergency hotline."
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+
+                <Button
+                    android:id="@+id/button"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="@dimen/margin_top"
+                    android:text="Alert"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    app:strokeColor="#95FFFFFF" />
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top"
+            android:layout_marginEnd="@dimen/margin_right"
+            app:cardBackgroundColor="#0D4DA4"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="@dimen/margin_top"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Get COVID-19 alerts"
+                    android:textColor="@color/white"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="@dimen/margin_right"
+                    android:fontFamily="sans-serif-light"
+                    android:lineSpacingExtra="3dp"
+                    android:text="You and your circle may be in an area that is categorized as a COVID-19 cluster. Get notifications to be cautious."
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+
+                <Button
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="@dimen/margin_top"
+                    android:text="Yes"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    app:strokeColor="#95FFFFFF" />
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+        <androidx.cardview.widget.CardView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="@dimen/margin_top"
+            android:layout_marginEnd="@dimen/margin_right"
+            app:cardBackgroundColor="#229653"
+            app:cardCornerRadius="8dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="@dimen/margin_top"
+                    android:fontFamily="sans-serif-medium"
+                    android:text="Enable crash detection"
+                    android:textColor="@color/white"
+                    android:textSize="24sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginEnd="@dimen/margin_right"
+                    android:fontFamily="sans-serif-light"
+                    android:lineSpacingExtra="3dp"
+                    android:text="Be prepared. Enable crash detection to keep the people in your circle, and their vehicles, safe."
+                    android:textColor="@color/white"
+                    android:textSize="14sp" />
+
+                <Button
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="@dimen/margin_left"
+                    android:layout_marginTop="10dp"
+                    android:layout_marginBottom="@dimen/margin_top"
+                    android:text="Yes"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    app:strokeColor="#95FFFFFF" />
+            </LinearLayout>
+
+        </androidx.cardview.widget.CardView>
+
+    </LinearLayout>
+</androidx.core.widget.NestedScrollView>

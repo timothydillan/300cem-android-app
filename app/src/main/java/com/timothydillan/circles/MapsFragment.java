@@ -5,11 +5,15 @@ import android.content.pm.PackageManager;
 import android.location.LocationListener;
 import android.location.LocationManager;
 import android.os.Bundle;
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.LinearLayout;
+import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
@@ -76,9 +80,17 @@ public class MapsFragment extends Fragment {
         https://medium.com/androiddevelopers/viewmodels-with-saved-state-jetpack-navigation-data-binding-and-coroutines-df476b78144e
         https://developer.android.com/topic/libraries/architecture/viewmodel-savedstate
         https://developer.android.com/guide/fragments/saving-state
-    9. Use FusedLocationAPI?
+    9. Use FusedLocationProvider?
     10. Test feature when new member added, need to move on fast to other features
     */
+
+    // Register the permissions callback, which handles the user's response to the
+    // system permissions dialog. Save the return value, an instance of
+    // ActivityResultLauncher, as an instance variable.
+    /*private ActivityResultLauncher<String[]> requestPermissionLauncher =
+            getActivity().registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), permissions -> {
+                permissions.forEach((k, v) -> Log.d("DEBUG", k + " = " + v));
+            });*/
 
     private final OnMapReadyCallback callback = new OnMapReadyCallback() {
         /**
@@ -94,8 +106,15 @@ public class MapsFragment extends Fragment {
         public void onMapReady(GoogleMap googleMap) {
             // Check whether location-related permissions are allowed. If they aren't, just return.
             if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED)
+                    ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
+                //requestPermissionLauncher.launch(new String[] {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
                 return;
+            }
+
+            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
+                    || shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
+                Toast.makeText(getContext(), "The application requires location access to locate you and your circle", Toast.LENGTH_LONG).show();
+            }
 
             mMap = googleMap;
 
@@ -177,10 +196,10 @@ public class MapsFragment extends Fragment {
             // Only show the memebr
             setUpRecyclerView(circleMemberView, memberList, circleMemberListener);
             */
+            mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             User member = circleUtil.getCircleMembers().get(position);
             LatLng memberPosition = membersLocation.get(member).getPosition();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberPosition, 16.0f));
-
         };
 
         return rootView;
