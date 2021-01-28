@@ -38,7 +38,7 @@
             android:layout_marginTop="@dimen/margin_top"
             android:layout_marginEnd="@dimen/margin_right"
             app:strokeWidth="1dp"
-            app:strokeColor="#DCDCDC"
+            app:strokeColor="@color/card_border_color"
             app:cardBackgroundColor="@color/card_color"
             app:cardCornerRadius="8dp"
             app:cardElevation="2dp">
@@ -53,7 +53,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="30dp"
             android:fontFamily="sans-serif-medium"
             android:text="Account"
             android:textColor="@color/primary_text"
@@ -65,7 +65,7 @@
             android:layout_marginTop="@dimen/margin_top"
             android:layout_marginEnd="@dimen/margin_right"
             app:strokeWidth="1dp"
-            app:strokeColor="#DCDCDC"
+            app:strokeColor="@color/card_border_color"
             app:cardBackgroundColor="@color/card_color"
             app:cardCornerRadius="8dp">
 
@@ -79,7 +79,7 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
+            android:layout_marginTop="30dp"
             android:fontFamily="sans-serif-medium"
             android:text="Privacy &amp; Security"
             android:textColor="@color/primary_text"
@@ -91,7 +91,7 @@
             android:layout_marginTop="@dimen/margin_top"
             android:layout_marginEnd="@dimen/margin_right"
             app:strokeWidth="1dp"
-            app:strokeColor="#DCDCDC"
+            app:strokeColor="@color/card_border_color"
             app:cardBackgroundColor="@color/card_color"
             app:cardCornerRadius="8dp">
 
@@ -104,17 +104,19 @@
 
         <Button
             android:id="@+id/signOutButton"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
+            style="@style/Widget.MaterialComponents.Button.OutlinedButton"
             android:layout_width="match_parent"
             android:layout_height="60dp"
             android:layout_marginTop="@dimen/margin_top"
-            android:textColor="@color/white"
-            android:backgroundTint="#1342BB"
+            android:layout_marginEnd="@dimen/margin_right"
+            android:layout_marginBottom="@dimen/margin_top"
+            android:textColor="@color/text_color"
+            app:strokeWidth="2dp"
             android:onClick="onSignOutClick"
             android:text="Sign Out"
             android:textAllCaps="false"
             android:textSize="16sp"
-            app:cornerRadius="16dp" />
+            app:cornerRadius="20dp" />
 
     </LinearLayout>
 </androidx.core.widget.NestedScrollView>

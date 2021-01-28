@@ -22,7 +22,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Circles">
-        <activity android:name=".CircleMembersActivity"></activity>
+        <activity android:name=".EditProfileActivity"></activity>
+        <activity android:name=".CircleMembersActivity" />
         <activity android:name=".JoinCircleActivity" />
         <!--
              The API key for Google Maps-based APIs is defined as a string resource.
@@ -35,6 +36,9 @@
         <meta-data
             android:name="com.google.android.geo.API_KEY"
             android:value="@string/google_maps_key" />
+        <meta-data
+            android:name="preloaded_fonts"
+            android:resource="@array/preloaded_fonts" />
 
         <activity android:name=".SignInActivity" />
         <activity android:name=".SignUpActivity" />
@@ -50,6 +54,7 @@
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="com.timothydillan.circles.MainActivity" />
+
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>

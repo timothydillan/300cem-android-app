@@ -1,9 +1,12 @@
 package com.timothydillan.circles;
 
 import android.Manifest;
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.content.pm.PackageManager;
 import android.location.LocationListener;
 import android.location.LocationManager;
+import android.os.Build;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -72,8 +75,6 @@ public class MapsFragment extends Fragment {
     /* TODO:
     3. Marker with member PFP. (needs custom marker and usr img)
     4. Get location in name (GeoCoder API)
-    5. If bottom sheet is clicked, get user ID, move camera to user with big zoom.
-    6. Popup Dialog if permissions are not allowed (maybe appropriate in MainActivity instead)
     7. Background location updates.
     8. Saving data using ViewModel or onSaveInstanceState:
         https://medium.com/androiddevelopers/viewmodels-a-simple-example-ed5ac416317e
@@ -83,14 +84,6 @@ public class MapsFragment extends Fragment {
     9. Use FusedLocationProvider?
     10. Test feature when new member added, need to move on fast to other features
     */
-
-    // Register the permissions callback, which handles the user's response to the
-    // system permissions dialog. Save the return value, an instance of
-    // ActivityResultLauncher, as an instance variable.
-    /*private ActivityResultLauncher<String[]> requestPermissionLauncher =
-            getActivity().registerForActivityResult(new ActivityResultContracts.RequestMultiplePermissions(), permissions -> {
-                permissions.forEach((k, v) -> Log.d("DEBUG", k + " = " + v));
-            });*/
 
     private final OnMapReadyCallback callback = new OnMapReadyCallback() {
         /**
@@ -104,17 +97,6 @@ public class MapsFragment extends Fragment {
          */
         @Override
         public void onMapReady(GoogleMap googleMap) {
-            // Check whether location-related permissions are allowed. If they aren't, just return.
-            if (ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_FINE_LOCATION) != PackageManager.PERMISSION_GRANTED &&
-                    ContextCompat.checkSelfPermission(getContext(), Manifest.permission.ACCESS_COARSE_LOCATION) != PackageManager.PERMISSION_GRANTED) {
-                //requestPermissionLauncher.launch(new String[] {Manifest.permission.ACCESS_FINE_LOCATION, Manifest.permission.ACCESS_COARSE_LOCATION});
-                return;
-            }
-
-            if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_FINE_LOCATION)
-                    || shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_COARSE_LOCATION)) {
-                Toast.makeText(getContext(), "The application requires location access to locate you and your circle", Toast.LENGTH_LONG).show();
-            }
 
             mMap = googleMap;
 
@@ -150,10 +132,15 @@ public class MapsFragment extends Fragment {
             LocationListener locationListener = location ->
                     updateUserLocation(location.getLatitude(), location.getLongitude());
 
+            if (!CircleUtil.hasLocationPermissions(requireContext())) {
+                return;
+            }
+
             // Update our location every 3 second with a minimum of 5 meter accuracy.
             locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, REFRESH_LOC_TIME, MIN_LOC_DIST, locationListener);
             locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, REFRESH_LOC_TIME, MIN_LOC_DIST, locationListener);
         }
+
     };
 
     @Override
@@ -161,6 +148,11 @@ public class MapsFragment extends Fragment {
         super.onCreate(savedInstanceState);
         currentUser = FirebaseAuth.getInstance().getCurrentUser();
         databaseReference = FirebaseDatabase.getInstance().getReference();
+
+        if (!CircleUtil.hasLocationPermissions(requireContext())) {
+            requestLocationPermissions();
+        }
+
         locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
     }
 
@@ -213,6 +205,26 @@ public class MapsFragment extends Fragment {
 
         if (mapFragment != null) {
             mapFragment.getMapAsync(callback);
+        }
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
+                                           @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == 100 && grantResults.length > 0) {
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("PermissionsRequest", permissions[i] + " granted.");
+                } else {
+                    // If somehow one of the permissions are denied, show a permission dialog.
+                    Log.d("PermissionsRequest", permissions[i] + " denied.");
+                    showPermissionsDialog(permissions[i]);
+                }
+            }
+            // If everything goes well, reset the map, and "restart" the fragment.
+            resetCircleMap();
+            getFragmentManager().beginTransaction().detach(this).attach(this).commit();
         }
     }
 
@@ -290,6 +302,28 @@ public class MapsFragment extends Fragment {
         databaseReference.child("Users").child(currentUser.getUid()).child("latitude").setValue(latitude);
         databaseReference.child("Users").child(currentUser.getUid()).child("longitude").setValue(longitude);
         databaseReference.child("Users").child(currentUser.getUid()).child("lastSharingTime").setValue(currentDateAndTime);
+    }
+
+    private void showPermissionsDialog(String permission) {
+        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        builder.setTitle("Location Permission")
+                .setMessage("This app needs access to " + permission + " for it to function properly.")
+                .setNegativeButton("CANCEL", (dialog, which) -> Toast.makeText(getContext(), "Well.. that's a shame.", Toast.LENGTH_LONG).show())
+                .setPositiveButton("OK", (dialog, which) -> requestLocationPermissions());
+        builder.create().show();
+    }
+
+    private void requestLocationPermissions() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            requestPermissions(new String[]
+                    {Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
+        } else {
+            requestPermissions(new String[]
+                    {Manifest.permission.ACCESS_FINE_LOCATION,
+                            Manifest.permission.ACCESS_COARSE_LOCATION,
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 100);
+        }
     }
 
 }

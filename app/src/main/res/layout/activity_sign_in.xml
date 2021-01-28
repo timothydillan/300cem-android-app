@@ -19,11 +19,11 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_gravity="end"
-            android:textColor="@color/primary_text"
             android:layout_marginTop="5dp"
-            android:text="@string/signup_text"
+            android:fontFamily="@font/muli"
             android:onClick="onTextClick"
-            />
+            android:text="@string/signup_text"
+            android:textColor="@color/primary_text" />
 
         <ImageView
             android:id="@+id/logoImage"
@@ -38,30 +38,31 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="16dp"
-            android:fontFamily="sans-serif-medium"
-            android:text="Welcome Back"
             android:layout_gravity="center"
+            android:layout_marginTop="16dp"
+            android:fontFamily="@font/muli"
+            android:text="Welcome Back"
             android:textColor="@color/primary_text"
             android:textSize="34sp" />
 
         <com.google.android.material.textfield.TextInputLayout
+            android:id="@+id/emailInputLayout"
             style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
+            android:hint="E-mail"
             app:boxCornerRadiusBottomEnd="8dp"
-            android:id="@+id/emailInputLayout"
-            android:hint="Email"
             app:boxCornerRadiusBottomStart="8dp"
             app:boxCornerRadiusTopEnd="8dp"
             app:boxCornerRadiusTopStart="8dp"
             app:placeholderText="e.g. john@email.com">
 
             <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/emailInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/emailInput"
+                android:fontFamily="@font/muli"
                 android:inputType="textEmailAddress" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -81,9 +82,10 @@
             app:passwordToggleTint="#979797">
 
             <com.google.android.material.textfield.TextInputEditText
+                android:id="@+id/passwordInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:id="@+id/passwordInput"
+                android:fontFamily="@font/muli"
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
@@ -94,6 +96,7 @@
             android:layout_height="60dp"
             android:layout_marginTop="@dimen/margin_top"
             android:backgroundTint="#1342BB"
+            android:fontFamily="@font/muli"
             android:onClick="onSignInButtonClick"
             android:text="Sign In"
             android:textAllCaps="false"
@@ -106,9 +109,10 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top"
+            android:fontFamily="@font/muli"
             android:gravity="center"
-            android:textColor="@color/primary_text"
             android:text="or"
+            android:textColor="@color/primary_text"
             android:textSize="18sp" />
 
         <LinearLayout

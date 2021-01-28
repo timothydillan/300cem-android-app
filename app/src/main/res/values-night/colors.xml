@@ -9,4 +9,6 @@
     <color name="white">#FFFFFFFF</color>
     <color name="primary_text">#FFFFFFFF</color>
     <color name="card_color">#1c1c1e</color>
+    <color name="text_color">#FFFFFFFF</color>
+    <color name="card_border_color">#1c1c1e</color>
 </resources>
