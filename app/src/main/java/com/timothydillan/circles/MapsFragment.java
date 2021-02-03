@@ -3,6 +3,7 @@ package com.timothydillan.circles;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -17,6 +18,7 @@ import android.widget.Toast;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -40,6 +42,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.timothydillan.circles.Adapters.CMemberRecyclerAdapter;
 import com.timothydillan.circles.Models.User;
+import com.timothydillan.circles.Services.LocationService;
 import com.timothydillan.circles.Utils.CircleUtil;
 
 import java.text.SimpleDateFormat;
@@ -51,29 +54,20 @@ import java.util.Map;
 public class MapsFragment extends Fragment {
 
     private static final LatLng SINGAPORE_COORDINATES = new LatLng(1.290270, 103.851959);
-    protected static final String KEY_UID = "keyUid";
     private static final int LOCATION_REQUEST_CODE = 100;
-    private static final long REFRESH_LOC_TIME = 3000;
-    private static final float MIN_LOC_DIST = 10F;
-    private final String USER_UID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     private CircleUtil circleUtil;
     private GoogleMap mMap;
-    private LocationRequest locationRequest;
-    private FusedLocationProviderClient locationProvider;
-    private LocationCallback locationCallback;
 
     private BottomSheetBehavior mBottomSheetBehavior;
     private RecyclerView circleMemberView;
     private CMemberRecyclerAdapter.RecyclerViewClickListener circleMemberListener;
     private CMemberRecyclerAdapter adapter;
-    private DatabaseReference databaseReference;
     private static HashMap<User, Marker> membersLocation = new HashMap<>();
 
     /* TODO:
     3. Custom marker
     4. Get location in name (GeoCoder API)
-    7. Background location updates (Broadcast).
     8. Saving data using ViewModel or onSaveInstanceState:
         https://medium.com/androiddevelopers/viewmodels-a-simple-example-ed5ac416317e
         https://medium.com/androiddevelopers/viewmodels-with-saved-state-jetpack-navigation-data-binding-and-coroutines-df476b78144e
@@ -110,6 +104,8 @@ public class MapsFragment extends Fragment {
                     // show the bottom sheet
                     mBottomSheetBehavior.setHideable(false);
                     mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
+                    Intent locationForegroundService = new Intent(requireContext(), LocationService.class);
+                    ContextCompat.startForegroundService(requireContext(), locationForegroundService);
                 }
                 @Override
                 public void onCircleChange() {
@@ -121,21 +117,6 @@ public class MapsFragment extends Fragment {
                     updateCircleMemberLocations(snapshot);
                 }
             });
-
-            locationCallback = new LocationCallback() {
-                @Override
-                public void onLocationResult(LocationResult locationResult) {
-                    if (locationResult == null) {
-                        return;
-                    }
-                    for (Location location : locationResult.getLocations()) {
-                        Log.d("LOCATION", "Location updated.");
-                        updateUserLocation(location.getLatitude(), location.getLongitude());
-                    }
-                }
-            };
-
-            getUserLocation();
         }
 
     };
@@ -143,8 +124,6 @@ public class MapsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        databaseReference = CircleUtil.databaseReference;
-
         if (!CircleUtil.hasLocationPermissions(requireContext())) {
             requestLocationPermissions();
         }
@@ -220,25 +199,6 @@ public class MapsFragment extends Fragment {
         }
     }
 
-    @SuppressLint("MissingPermission")
-    private void getUserLocation() {
-        // Initialize Location Request
-        locationRequest = new LocationRequest();
-        locationRequest.setSmallestDisplacement(MIN_LOC_DIST);
-        locationRequest.setFastestInterval(REFRESH_LOC_TIME);
-        locationRequest.setInterval(REFRESH_LOC_TIME);
-        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
-
-        locationProvider = LocationServices.getFusedLocationProviderClient(requireContext());
-
-        // Sanity check so that requesting location updates doesn't crash.
-        if (!CircleUtil.hasLocationPermissions(requireContext())) {
-            return;
-        }
-
-        locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
-    }
-
     private void setUpRecyclerView(ArrayList<User> memberList, CMemberRecyclerAdapter.RecyclerViewClickListener listener) {
         adapter = new CMemberRecyclerAdapter(requireContext(), memberList, listener, R.layout.circle_member_list);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(requireContext());
@@ -298,16 +258,6 @@ public class MapsFragment extends Fragment {
         mMap.clear();
         // clear the hashmap
         membersLocation.clear();
-    }
-
-    private void updateUserLocation(double latitude, double longitude) {
-        // Get current date
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
-        String currentDateAndTime = dateFormat.format(new Date());
-        // Update latitude, longitude, and the last sharing time of the users.
-        databaseReference.child("Users").child(USER_UID).child("latitude").setValue(latitude);
-        databaseReference.child("Users").child(USER_UID).child("longitude").setValue(longitude);
-        databaseReference.child("Users").child(USER_UID).child("lastSharingTime").setValue(currentDateAndTime);
     }
 
     private void showPermissionsDialog(String permission) {
