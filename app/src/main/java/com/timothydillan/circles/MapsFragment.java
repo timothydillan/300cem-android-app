@@ -1,13 +1,13 @@
 package com.timothydillan.circles;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
-import android.content.DialogInterface;
 import android.content.pm.PackageManager;
-import android.location.LocationListener;
-import android.location.LocationManager;
+import android.location.Location;
 import android.os.Build;
 import android.os.Bundle;
+import android.os.Looper;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -15,16 +15,18 @@ import android.view.ViewGroup;
 import android.widget.LinearLayout;
 import android.widget.Toast;
 
-import androidx.activity.result.ActivityResultLauncher;
-import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import com.google.android.gms.location.FusedLocationProviderClient;
+import com.google.android.gms.location.LocationCallback;
+import com.google.android.gms.location.LocationRequest;
+import com.google.android.gms.location.LocationResult;
+import com.google.android.gms.location.LocationServices;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
@@ -34,10 +36,8 @@ import com.google.android.gms.maps.model.Marker;
 import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.android.material.bottomsheet.BottomSheetBehavior;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
 import com.timothydillan.circles.Adapters.CMemberRecyclerAdapter;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.Utils.CircleUtil;
@@ -48,40 +48,37 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-import static android.content.Context.LOCATION_SERVICE;
-
 public class MapsFragment extends Fragment {
 
-    private static final LatLng singaporeCoordinates = new LatLng(1.290270, 103.851959);
+    private static final LatLng SINGAPORE_COORDINATES = new LatLng(1.290270, 103.851959);
     protected static final String KEY_UID = "keyUid";
+    private static final int LOCATION_REQUEST_CODE = 100;
+    private static final long REFRESH_LOC_TIME = 3000;
+    private static final float MIN_LOC_DIST = 10F;
+    private final String USER_UID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     private CircleUtil circleUtil;
     private GoogleMap mMap;
-    private LocationManager locationManager;
-
-    private static final long REFRESH_LOC_TIME = 3000;
-    private static final long MIN_LOC_DIST = 5;
+    private LocationRequest locationRequest;
+    private FusedLocationProviderClient locationProvider;
+    private LocationCallback locationCallback;
 
     private BottomSheetBehavior mBottomSheetBehavior;
     private RecyclerView circleMemberView;
     private CMemberRecyclerAdapter.RecyclerViewClickListener circleMemberListener;
     private CMemberRecyclerAdapter adapter;
-
     private DatabaseReference databaseReference;
-    private FirebaseUser currentUser;
-
-    private static final HashMap<User, Marker> membersLocation = new HashMap<>();
+    private static HashMap<User, Marker> membersLocation = new HashMap<>();
 
     /* TODO:
-    3. Marker with member PFP. (needs custom marker and usr img)
+    3. Custom marker
     4. Get location in name (GeoCoder API)
-    7. Background location updates.
+    7. Background location updates (Broadcast).
     8. Saving data using ViewModel or onSaveInstanceState:
         https://medium.com/androiddevelopers/viewmodels-a-simple-example-ed5ac416317e
         https://medium.com/androiddevelopers/viewmodels-with-saved-state-jetpack-navigation-data-binding-and-coroutines-df476b78144e
         https://developer.android.com/topic/libraries/architecture/viewmodel-savedstate
         https://developer.android.com/guide/fragments/saving-state
-    9. Use FusedLocationProvider?
     10. Test feature when new member added, need to move on fast to other features
     */
 
@@ -97,10 +94,8 @@ public class MapsFragment extends Fragment {
          */
         @Override
         public void onMapReady(GoogleMap googleMap) {
-
             mMap = googleMap;
-
-            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(singaporeCoordinates, 12.f));
+            mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(SINGAPORE_COORDINATES, 12.f));
 
             // When the map is ready, create a circle listener
             circleUtil = new CircleUtil(new CircleUtil.CircleUtilListener() {
@@ -111,34 +106,36 @@ public class MapsFragment extends Fragment {
                     // place the markers at the appropriate places
                     initializeCircleMarkers(members);
                     // set up the recycler view for the bottom sheet
-                    setUpRecyclerView(circleMemberView, members, circleMemberListener);
+                    setUpRecyclerView(members, circleMemberListener);
                     // show the bottom sheet
                     mBottomSheetBehavior.setHideable(false);
                     mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
                 }
-
                 @Override
                 public void onCircleChange() {
                     resetCircleMap();
                 }
-
                 @Override
                 public void onUsersChange(@NonNull DataSnapshot snapshot) {
+                    // If any data changed, update the recycler view and markers.
                     updateCircleMemberLocations(snapshot);
                 }
             });
 
-            // Every time our location changes, update the user's latitude and longitude in the database.
-            LocationListener locationListener = location ->
-                    updateUserLocation(location.getLatitude(), location.getLongitude());
+            locationCallback = new LocationCallback() {
+                @Override
+                public void onLocationResult(LocationResult locationResult) {
+                    if (locationResult == null) {
+                        return;
+                    }
+                    for (Location location : locationResult.getLocations()) {
+                        Log.d("LOCATION", "Location updated.");
+                        updateUserLocation(location.getLatitude(), location.getLongitude());
+                    }
+                }
+            };
 
-            if (!CircleUtil.hasLocationPermissions(requireContext())) {
-                return;
-            }
-
-            // Update our location every 3 second with a minimum of 5 meter accuracy.
-            locationManager.requestLocationUpdates(LocationManager.NETWORK_PROVIDER, REFRESH_LOC_TIME, MIN_LOC_DIST, locationListener);
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, REFRESH_LOC_TIME, MIN_LOC_DIST, locationListener);
+            getUserLocation();
         }
 
     };
@@ -146,14 +143,11 @@ public class MapsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        currentUser = FirebaseAuth.getInstance().getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference();
+        databaseReference = CircleUtil.databaseReference;
 
         if (!CircleUtil.hasLocationPermissions(requireContext())) {
             requestLocationPermissions();
         }
-
-        locationManager = (LocationManager) getActivity().getSystemService(LOCATION_SERVICE);
     }
 
     @Nullable
@@ -161,10 +155,21 @@ public class MapsFragment extends Fragment {
     public View onCreateView(@NonNull LayoutInflater inflater,
                              @Nullable ViewGroup container,
                              @Nullable Bundle savedInstanceState) {
+        return inflater.inflate(R.layout.fragment_maps, container, false);
+    }
 
-        View rootView = inflater.inflate(R.layout.fragment_maps, container, false);
-        circleMemberView = rootView.findViewById(R.id.circleMembersView);
-        LinearLayout mBottomSheet = rootView.findViewById(R.id.circleMemberBottomSheet);
+    @Override
+    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
+        super.onViewCreated(view, savedInstanceState);
+        SupportMapFragment mapFragment =
+                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
+
+        if (mapFragment != null) {
+            mapFragment.getMapAsync(callback);
+        }
+
+        circleMemberView = view.findViewById(R.id.circleMembersView);
+        LinearLayout mBottomSheet = view.findViewById(R.id.circleMemberBottomSheet);
         mBottomSheetBehavior = BottomSheetBehavior.from(mBottomSheet);
         mBottomSheetBehavior.setHideable(true);
         mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
@@ -193,19 +198,6 @@ public class MapsFragment extends Fragment {
             LatLng memberPosition = membersLocation.get(member).getPosition();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberPosition, 16.0f));
         };
-
-        return rootView;
-    }
-
-    @Override
-    public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
-        super.onViewCreated(view, savedInstanceState);
-        SupportMapFragment mapFragment =
-                (SupportMapFragment) getChildFragmentManager().findFragmentById(R.id.map);
-
-        if (mapFragment != null) {
-            mapFragment.getMapAsync(callback);
-        }
     }
 
     @Override
@@ -228,12 +220,31 @@ public class MapsFragment extends Fragment {
         }
     }
 
-    private void setUpRecyclerView(RecyclerView recyclerView, ArrayList<User> memberList, CMemberRecyclerAdapter.RecyclerViewClickListener listener) {
-        adapter = new CMemberRecyclerAdapter(memberList, listener, R.layout.circle_member_list);
-        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(getContext());
-        recyclerView.setLayoutManager(layoutManager);
-        recyclerView.setItemAnimator(new DefaultItemAnimator());
-        recyclerView.setAdapter(adapter);
+    @SuppressLint("MissingPermission")
+    private void getUserLocation() {
+        // Initialize Location Request
+        locationRequest = new LocationRequest();
+        locationRequest.setSmallestDisplacement(MIN_LOC_DIST);
+        locationRequest.setFastestInterval(REFRESH_LOC_TIME);
+        locationRequest.setInterval(REFRESH_LOC_TIME);
+        locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
+
+        locationProvider = LocationServices.getFusedLocationProviderClient(requireContext());
+
+        // Sanity check so that requesting location updates doesn't crash.
+        if (!CircleUtil.hasLocationPermissions(requireContext())) {
+            return;
+        }
+
+        locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+
+    private void setUpRecyclerView(ArrayList<User> memberList, CMemberRecyclerAdapter.RecyclerViewClickListener listener) {
+        adapter = new CMemberRecyclerAdapter(requireContext(), memberList, listener, R.layout.circle_member_list);
+        RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(requireContext());
+        circleMemberView.setLayoutManager(layoutManager);
+        circleMemberView.setItemAnimator(new DefaultItemAnimator());
+        circleMemberView.setAdapter(adapter);
     }
 
     private void initializeCircleMarkers(ArrayList<User> circleMembers) {
@@ -243,21 +254,16 @@ public class MapsFragment extends Fragment {
             LatLng memberLocation = new LatLng(circleMember.getLatitude(), circleMember.getLongitude());
             // And create a marker with their location
             Marker memberMarker = mMap.addMarker(new MarkerOptions().position(memberLocation).title(circleMember.getFirstName() + "'s Location"));
-            // Animate/move the camera to the current member being iterated with a zoom of 15
-            mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberLocation, 15.0f));
+            // Animate/move the camera to the current member being iterated with a zoom of 15 (if its the user)
+            if (circleMember.getUid().equals(CircleUtil.getCurrentMember().getUid()))
+                mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberLocation, 15.0f));
             // and put it into the hashmap.
             membersLocation.put(circleMember, memberMarker);
         }
     }
 
     private void updateCircleMemberLocations(@NonNull DataSnapshot snapshot) {
-        // Just a little sanity check :).
-        if (membersLocation.isEmpty()) {
-            System.out.println("Members locations has not been initialized yet.");
-            return;
-        }
-
-        // Create an array list
+        // Create an array list to store newly updated information
         ArrayList<User> newMemberInformation = new ArrayList<>();
         // For each of the data received,
         for (DataSnapshot ds : snapshot.getChildren()) {
@@ -299,16 +305,17 @@ public class MapsFragment extends Fragment {
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
         String currentDateAndTime = dateFormat.format(new Date());
         // Update latitude, longitude, and the last sharing time of the users.
-        databaseReference.child("Users").child(currentUser.getUid()).child("latitude").setValue(latitude);
-        databaseReference.child("Users").child(currentUser.getUid()).child("longitude").setValue(longitude);
-        databaseReference.child("Users").child(currentUser.getUid()).child("lastSharingTime").setValue(currentDateAndTime);
+        databaseReference.child("Users").child(USER_UID).child("latitude").setValue(latitude);
+        databaseReference.child("Users").child(USER_UID).child("longitude").setValue(longitude);
+        databaseReference.child("Users").child(USER_UID).child("lastSharingTime").setValue(currentDateAndTime);
     }
 
     private void showPermissionsDialog(String permission) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
+        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
         builder.setTitle("Location Permission")
                 .setMessage("This app needs access to " + permission + " for it to function properly.")
-                .setNegativeButton("CANCEL", (dialog, which) -> Toast.makeText(getContext(), "Well.. that's a shame.", Toast.LENGTH_LONG).show())
+                .setNegativeButton("CANCEL", (dialog, which) -> Toast.makeText(requireContext(),
+                        "Well.. that's a shame.", Toast.LENGTH_LONG).show())
                 .setPositiveButton("OK", (dialog, which) -> requestLocationPermissions());
         builder.create().show();
     }
@@ -317,13 +324,12 @@ public class MapsFragment extends Fragment {
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
             requestPermissions(new String[]
                     {Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION}, 100);
+                            Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST_CODE);
         } else {
             requestPermissions(new String[]
                     {Manifest.permission.ACCESS_FINE_LOCATION,
                             Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_BACKGROUND_LOCATION}, 100);
+                            Manifest.permission.ACCESS_BACKGROUND_LOCATION}, LOCATION_REQUEST_CODE);
         }
     }
-
 }

@@ -1,11 +1,18 @@
 <resources>
     <string name="app_name">circles</string>
     <string name="logo_description">The logo of the app</string>
-    <string name="welcome_text">Welcome to Circles</string>
+    <string name="welcome_text">Welcome to circles</string>
     <string name="login_text">Have an account? <font color='#1861CE'>Log In</font></string>
     <string name="signup_text">Don\'t have an account? <font color='#1861CE'>Sign Up</font></string>
-    <string name="signup_button">Create an Account</string>
+    <string name="border_text"><font color='#a7c967'>---</font><font color='#ea702f'>---</font><font color='#ee9d34'>---</font><font color='#77afee'>---</font></string>
+    <string name="signup_button">Get Started</string>
     <string name="title_activity_maps">Map</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
+    <string-array name="gender_options">
+        <item>Male</item>
+        <item>Female</item>
+        <item>Non-binary</item>
+        <item>Prefer not to disclose</item>
+    </string-array>
 </resources>

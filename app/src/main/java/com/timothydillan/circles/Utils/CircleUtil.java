@@ -3,6 +3,7 @@ package com.timothydillan.circles.Utils;
 import android.Manifest;
 import android.content.Context;
 import android.content.pm.PackageManager;
+import android.os.Build;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
@@ -17,6 +18,7 @@ import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
+import com.timothydillan.circles.Models.Circle;
 import com.timothydillan.circles.Models.User;
 
 import java.util.ArrayList;
@@ -26,11 +28,12 @@ public class CircleUtil {
     private CircleUtilListener listener;
     // Need to make these static as they need to be shared for all instances using it.
     private static final String FIREBASE_TAG = "circleUtility";
-    private static final DatabaseReference databaseReference = FirebaseDatabase.getInstance()
+    public static final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
+    public static final DatabaseReference databaseReference = FirebaseDatabase.getInstance()
             .getReference();
-    private static final FirebaseUser currentUser = FirebaseAuth.getInstance().getCurrentUser();
     private static final ArrayList<User> circleMembers = new ArrayList<>();
     private static User currentMember;
+
 
     public CircleUtil(CircleUtilListener listener) {
         // If a class provides the listener immediately on construct,
@@ -43,6 +46,8 @@ public class CircleUtil {
             removeDuplicateMembers();
             // then trigger the onCircleReady event
             this.listener.onCircleReady(circleMembers);
+            updateUsers();
+            updateCircle();
         } else {
             // if they're null, then initialize the circle first.
             circleInitialization();
@@ -50,12 +55,19 @@ public class CircleUtil {
     }
 
     public static boolean hasLocationPermissions(Context context) {
-        return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
-                == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED &&
-                ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                        == PackageManager.PERMISSION_GRANTED;
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
+            return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED;
+        } else {
+            return ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_FINE_LOCATION)
+                    == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_COARSE_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED &&
+                    ContextCompat.checkSelfPermission(context, Manifest.permission.ACCESS_BACKGROUND_LOCATION)
+                            == PackageManager.PERMISSION_GRANTED;
+        }
     }
 
     private void circleInitialization() {
@@ -102,7 +114,7 @@ public class CircleUtil {
                         for (DataSnapshot ds : snapshot.getChildren()) {
                             // No need to get the user's UID because he/she has been added
                             // into the list.
-                            if (ds.getKey().equals(currentMember.getUid())) {
+                            if (ds.getKey().equals(currentUser.getUid())) {
                                 continue;
                             }
                             Log.d(FIREBASE_TAG, "Adding member UID into list.");
@@ -239,8 +251,18 @@ public class CircleUtil {
         return circleMembers;
     }
 
-    private User getCurrentMember() {
+    public static User getCurrentMember() {
         return currentMember;
+    }
+
+    public static void updateCurrentMember(User user) {
+        currentMember.setFirstName(user.getFirstName());
+        currentMember.setLastName(user.getLastName());
+        currentMember.setBirthDate(user.getBirthDate());
+        currentMember.setEmail(user.getEmail());
+        currentMember.setGender(user.getGender());
+        currentMember.setPhone(user.getPhone());
+        currentMember.setProfilePicUrl(user.getProfilePicUrl());
     }
 
     public interface CircleUtilListener {
