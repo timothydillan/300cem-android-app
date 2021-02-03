@@ -25,15 +25,13 @@ public class SettingsFragment extends Fragment {
         3. Circle Members
         4. Circle Places (Geo-fencing, notifications)
     2. Account Configuration
-        1. Edit Details (PFP)
-        2. Remove Account -> delete circle and also data in db
+        2. Remove Account -> delete circle and data in db
         3. Notifications
     3. Privacy & Security
         1. Password/Fingerprint/FaceID
         2. Terms & Conditions
         3. Privacy Policy
     */
-
     private final ItemModel circleConfigItemList = new ItemModel();
     private final ItemModel accountConfigItemList = new ItemModel();
     private final ItemModel privacyConfigItemList = new ItemModel();
@@ -68,7 +66,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void addAccountConfigurations() {
-        accountConfigItemList.addItem("Edit Details", JoinCircleActivity.class);
+        accountConfigItemList.addItem("Edit Details", EditProfileActivity.class);
         accountConfigItemList.addItem("Remove Account", JoinCircleActivity.class);
         accountConfigItemList.addItem("Notifications", JoinCircleActivity.class);
     }

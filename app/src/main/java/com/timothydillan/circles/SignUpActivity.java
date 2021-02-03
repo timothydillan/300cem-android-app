@@ -143,8 +143,7 @@ public class SignUpActivity extends ActivityInterface {
         return true;
     }
 
-    @Override
-    public void onTextClick(View v) {
+    public void onSignInClick(View v) {
         // TODO: Can implement an extra feature here to send Email and Password data if filled already to the sign in activity class
         // making it easier for users
         Intent signInActivity = new Intent(SignUpActivity.this, SignInActivity.class);
