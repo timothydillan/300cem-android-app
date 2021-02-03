@@ -18,7 +18,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="16dp"
-            android:fontFamily="sans-serif-medium"
+            android:fontFamily="@font/dmsans_bold"
             android:text="Safety"
             android:textColor="@color/primary_text"
             android:textSize="48sp" />
@@ -26,8 +26,8 @@
         <TextView
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_marginTop="4dp"
-            android:fontFamily="sans-serif-light"
+            android:layout_marginTop="8dp"
+            android:fontFamily="@font/dmsans"
             android:text="Take a look at ways you can help protect you and your circle."
             android:textColor="@color/primary_text"
             android:textSize="16sp" />
@@ -35,7 +35,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_top"
+            android:layout_marginTop="30dp"
             android:layout_marginEnd="@dimen/margin_right"
             app:cardBackgroundColor="#EB5758"
             app:cardCornerRadius="8dp">
@@ -50,7 +50,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="@dimen/margin_top"
-                    android:fontFamily="sans-serif-medium"
+                    android:fontFamily="@font/dmsans_medium"
                     android:text="SOS"
                     android:textColor="@color/white"
                     android:textSize="24sp" />
@@ -61,7 +61,7 @@
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="10dp"
                     android:layout_marginEnd="@dimen/margin_right"
-                    android:fontFamily="sans-serif-light"
+                    android:fontFamily="@font/dmsans"
                     android:lineSpacingExtra="3dp"
                     android:text="Trigger circle notifications and call the nearest emergency hotline."
                     android:textColor="@color/white"
@@ -74,6 +74,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="10dp"
+                    android:fontFamily="@font/dmsans"
                     android:layout_marginBottom="@dimen/margin_top"
                     android:text="Alert"
                     android:textAllCaps="false"
@@ -86,7 +87,7 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_top"
+            android:layout_marginTop="30dp"
             android:layout_marginEnd="@dimen/margin_right"
             app:cardBackgroundColor="#0D4DA4"
             app:cardCornerRadius="8dp">
@@ -101,7 +102,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="@dimen/margin_top"
-                    android:fontFamily="sans-serif-medium"
+                    android:fontFamily="@font/dmsans_medium"
                     android:text="Get COVID-19 alerts"
                     android:textColor="@color/white"
                     android:textSize="24sp" />
@@ -112,7 +113,7 @@
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="10dp"
                     android:layout_marginEnd="@dimen/margin_right"
-                    android:fontFamily="sans-serif-light"
+                    android:fontFamily="@font/dmsans"
                     android:lineSpacingExtra="3dp"
                     android:text="You and your circle may be in an area that is categorized as a COVID-19 cluster. Get notifications to be cautious."
                     android:textColor="@color/white"
@@ -125,6 +126,7 @@
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="10dp"
                     android:layout_marginBottom="@dimen/margin_top"
+                    android:fontFamily="@font/dmsans"
                     android:text="Yes"
                     android:textAllCaps="false"
                     android:textColor="@color/white"
@@ -136,8 +138,9 @@
         <androidx.cardview.widget.CardView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginTop="@dimen/margin_top"
+            android:layout_marginTop="30dp"
             android:layout_marginEnd="@dimen/margin_right"
+            android:layout_marginBottom="@dimen/margin_top"
             app:cardBackgroundColor="#229653"
             app:cardCornerRadius="8dp">
 
@@ -151,7 +154,7 @@
                     android:layout_height="wrap_content"
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="@dimen/margin_top"
-                    android:fontFamily="sans-serif-medium"
+                    android:fontFamily="@font/dmsans_medium"
                     android:text="Enable crash detection"
                     android:textColor="@color/white"
                     android:textSize="24sp" />
@@ -162,7 +165,7 @@
                     android:layout_marginStart="@dimen/margin_left"
                     android:layout_marginTop="10dp"
                     android:layout_marginEnd="@dimen/margin_right"
-                    android:fontFamily="sans-serif-light"
+                    android:fontFamily="@font/dmsans"
                     android:lineSpacingExtra="3dp"
                     android:text="Be prepared. Enable crash detection to keep the people in your circle, and their vehicles, safe."
                     android:textColor="@color/white"
@@ -176,11 +179,11 @@
                     android:layout_marginTop="10dp"
                     android:layout_marginBottom="@dimen/margin_top"
                     android:text="Yes"
+                    android:fontFamily="@font/dmsans"
                     android:textAllCaps="false"
                     android:textColor="@color/white"
                     app:strokeColor="#95FFFFFF" />
             </LinearLayout>
-
         </androidx.cardview.widget.CardView>
 
     </LinearLayout>
