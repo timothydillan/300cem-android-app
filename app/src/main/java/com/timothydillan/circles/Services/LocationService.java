@@ -65,8 +65,8 @@ public class LocationService extends Service {
         Intent mapActivityIntent = new Intent(this, MainActivity.class);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mapActivityIntent, 0);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                .setContentTitle("circles location")
-                .setContentText("Hey there! We're tracking your location :)")
+                .setContentTitle("location notif")
+                .setContentText("hey there. we're tracking your location 🌝📍.")
                 .setSmallIcon(R.drawable.logo)
                 .setContentIntent(pendingIntent)
                 .build();
