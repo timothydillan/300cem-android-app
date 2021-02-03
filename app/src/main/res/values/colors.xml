@@ -5,6 +5,9 @@
     <color name="purple_700">#FF3700B3</color>
     <color name="teal_200">#FF03DAC5</color>
     <color name="teal_700">#FF018786</color>
+    <color name="green">#16BA26</color>
+    <color name="red">#D60909</color>
+    <color name="dark_blue">#1342BB</color>
     <color name="black">#FF000000</color>
     <color name="white">#FFFFFFFF</color>
     <color name="primary_text">#FF000000</color>
@@ -12,4 +15,12 @@
     <color name="card_color">#FFFFFFFF</color>
     <color name="text_color">#646464</color>
     <color name="card_border_color">#DCDCDC</color>
+    <color name="item_divider">#CAC9C9</color>
+    <color name="transparent_color">#00FFFFFF</color>
+    <color name="chip_disabled_color">#bbbbbb</color>
+    <color name="chip_disabled_text_color">#4C4C4C</color>
+    <color name="chip_bg_color">#00FFFFFF</color>
+    <color name="chip_border_color">#CAC9C9</color>
+    <color name="chip_text_color">#FF000000</color>
+    <color name="chip_icon_color">#2F69DF</color>
 </resources>

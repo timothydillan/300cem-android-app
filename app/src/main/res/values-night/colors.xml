@@ -11,4 +11,11 @@
     <color name="card_color">#1c1c1e</color>
     <color name="text_color">#FFFFFFFF</color>
     <color name="card_border_color">#1c1c1e</color>
+    <color name="item_divider">#757575</color>
+    <color name="chip_disabled_color">#252525</color>
+    <color name="chip_disabled_text_color">#636363</color>
+    <color name="chip_bg_color">#192944</color>
+    <color name="chip_border_color">#00FFFFFF</color>
+    <color name="chip_text_color">#6393F4</color>
+    <color name="chip_icon_color">#6393F4</color>
 </resources>
