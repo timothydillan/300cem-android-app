@@ -25,8 +25,9 @@ public class LocationService extends BroadcastReceiver {
         if (!intent.getAction().equals(TAG)) {
             return;
         }
-        Location location = LocationResult.extractResult(intent).getLastLocation();
-        if (location != null) {
+        LocationResult results = LocationResult.extractResult(intent);
+        if (results != null) {
+            Location location = results.getLastLocation();
             Log.d("LOCATION service", "Location service updated.");
             updateUserLocation(location);
         }
