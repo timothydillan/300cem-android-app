@@ -91,7 +91,7 @@ public class ProgressButton {
             AnimatedVectorDrawable avd = (AnimatedVectorDrawable) drawable;
             avd.start();
         }
-        new Handler().postDelayed(() -> resetButton(), 2000);
+        new Handler().postDelayed(this::resetButton, 2000);
     }
 
     @RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)

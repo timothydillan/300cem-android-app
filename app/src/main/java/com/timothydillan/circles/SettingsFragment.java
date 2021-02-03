@@ -27,6 +27,9 @@ public class SettingsFragment extends Fragment {
     2. Account Configuration
         2. Remove Account -> delete circle and data in db
         3. Notifications
+            1. Notification if a user joined circle
+            2. Notification that we're currently tracking him/her
+            3. Mood notifications
     3. Privacy & Security
         1. Password/Fingerprint/FaceID
         2. Terms & Conditions

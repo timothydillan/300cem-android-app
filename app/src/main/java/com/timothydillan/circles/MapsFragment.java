@@ -3,6 +3,8 @@ package com.timothydillan.circles;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.AlertDialog;
+import android.app.PendingIntent;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.location.Location;
 import android.os.Build;
@@ -40,6 +42,7 @@ import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseReference;
 import com.timothydillan.circles.Adapters.CMemberRecyclerAdapter;
 import com.timothydillan.circles.Models.User;
+import com.timothydillan.circles.Services.LocationService;
 import com.timothydillan.circles.Utils.CircleUtil;
 
 import java.text.SimpleDateFormat;
@@ -55,7 +58,7 @@ public class MapsFragment extends Fragment {
     private static final int LOCATION_REQUEST_CODE = 100;
     private static final long REFRESH_LOC_TIME = 3000;
     private static final float MIN_LOC_DIST = 10F;
-    private final String USER_UID = FirebaseAuth.getInstance().getCurrentUser().getUid();
+    private static final String USER_UID = FirebaseAuth.getInstance().getCurrentUser().getUid();
 
     private CircleUtil circleUtil;
     private GoogleMap mMap;
@@ -129,8 +132,8 @@ public class MapsFragment extends Fragment {
                         return;
                     }
                     for (Location location : locationResult.getLocations()) {
-                        Log.d("LOCATION", "Location updated.");
-                        updateUserLocation(location.getLatitude(), location.getLongitude());
+                        Log.d("LOCATION", "Location callback updated.");
+                        //updateUserLocation(location.getLatitude(), location.getLongitude());
                     }
                 }
             };
@@ -236,7 +239,14 @@ public class MapsFragment extends Fragment {
             return;
         }
 
-        locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        //locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+        locationProvider.requestLocationUpdates(locationRequest, getPendingIntent());
+    }
+
+    private PendingIntent getPendingIntent() {
+        Intent intent = new Intent(requireContext(), LocationService.class);
+        intent.setAction(LocationService.TAG);
+        return PendingIntent.getBroadcast(requireContext(), LOCATION_REQUEST_CODE, intent, PendingIntent.FLAG_UPDATE_CURRENT);
     }
 
     private void setUpRecyclerView(ArrayList<User> memberList, CMemberRecyclerAdapter.RecyclerViewClickListener listener) {
