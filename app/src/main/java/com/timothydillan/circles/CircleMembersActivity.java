@@ -4,6 +4,9 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
 
+import android.content.ClipData;
+import android.content.ClipboardManager;
+import android.content.Context;
 import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
@@ -11,11 +14,13 @@ import android.view.MenuItem;
 import android.view.View;
 
 import com.google.android.material.chip.Chip;
+import com.google.android.material.snackbar.Snackbar;
 import com.timothydillan.circles.Utils.UserUtil;
 
 public class CircleMembersActivity extends AppCompatActivity {
 
     private final String CIRCLE_CODE = String.valueOf(UserUtil.getCurrentUser().getCurrentCircleSession());
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -26,6 +31,14 @@ public class CircleMembersActivity extends AppCompatActivity {
         getSupportActionBar().setDisplayShowTitleEnabled(false);
         Chip inviteCodeChip = findViewById(R.id.circleInviteCodeChip);
         inviteCodeChip.setText(CIRCLE_CODE);
+        inviteCodeChip.setOnLongClickListener(v -> {
+            ClipboardManager clipboardManager = (ClipboardManager) getSystemService(Context.CLIPBOARD_SERVICE);
+            ClipData clipData = ClipData.newPlainText(getResources().getString(R.string.app_name),
+                    inviteCodeChip.getText().toString());
+            clipboardManager.setPrimaryClip(clipData);
+            Snackbar.make(findViewById(android.R.id.content),"Copied invite code to clipboard.", Snackbar.LENGTH_SHORT).show();
+            return false;
+        });
     }
 
     @Override

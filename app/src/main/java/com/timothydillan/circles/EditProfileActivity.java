@@ -49,7 +49,8 @@ public class EditProfileActivity extends AppCompatActivity {
 
     // Views
     private ImageView profileImageView;
-    private EditText firstNameEditText, lastNameEditText;
+    private EditText firstNameEditText;
+    private EditText lastNameEditText;
     private AutoCompleteTextView genderDropdown;
     private TextView birthdayTextView;
     private TextView emailTextView;
