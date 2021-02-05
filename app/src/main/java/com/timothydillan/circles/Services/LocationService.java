@@ -25,16 +25,20 @@ import com.google.firebase.database.DatabaseReference;
 import com.timothydillan.circles.MainActivity;
 import com.timothydillan.circles.R;
 import com.timothydillan.circles.Utils.CircleUtil;
+import com.timothydillan.circles.Utils.FirebaseUtil;
+import com.timothydillan.circles.Utils.PermissionUtil;
+import com.timothydillan.circles.Utils.UserUtil;
 
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
 public class LocationService extends Service {
-    public static final String CHANNEL_ID = "circlesLocationChannel";
+    private static final String CHANNEL_ID = "circlesLocationChannel";
     private static final long REFRESH_LOC_TIME = 3000;
     private static final float MIN_LOC_DIST = 10F;
-    private static final String USER_UID = CircleUtil.getCurrentMember().getUid();
-    private static final DatabaseReference databaseReference = CircleUtil.databaseReference;
+    private static final String USER_UID = UserUtil.getCurrentUser().getUid();
+    private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
+    private PermissionUtil permissionUtil;
 
     private FusedLocationProviderClient locationProvider;
     private LocationCallback locationCallback;
@@ -42,6 +46,7 @@ public class LocationService extends Service {
     @Override
     public void onCreate() {
         super.onCreate();
+        permissionUtil = new PermissionUtil(this);
         initializeNotificationChannel();
     }
 
@@ -117,7 +122,7 @@ public class LocationService extends Service {
         locationRequest.setPriority(LocationRequest.PRIORITY_HIGH_ACCURACY);
 
         // Sanity check so that requesting location updates doesn't crash.
-        if (!CircleUtil.hasLocationPermissions(this)) {
+        if (!permissionUtil.hasLocationPermissions()) {
             return;
         }
 

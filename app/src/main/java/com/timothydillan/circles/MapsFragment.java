@@ -34,17 +34,22 @@ import com.timothydillan.circles.Adapters.CMemberRecyclerAdapter;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.Services.LocationService;
 import com.timothydillan.circles.Utils.CircleUtil;
+import com.timothydillan.circles.Utils.PermissionUtil;
+import com.timothydillan.circles.Utils.UserUtil;
 
+import java.security.Permission;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.Objects;
 
 public class MapsFragment extends Fragment {
-
+    private static final String LOG_TAG = "MapsFragment";
     private static final LatLng SINGAPORE_COORDINATES = new LatLng(1.290270, 103.851959);
-    private static final int LOCATION_REQUEST_CODE = 100;
 
-    private CircleUtil circleUtil;
+    private CircleUtil circleUtil = new CircleUtil();
+    private UserUtil userUtil = new UserUtil();
+    private PermissionUtil permissionUtil;
     private GoogleMap mMap;
 
     private BottomSheetBehavior mBottomSheetBehavior;
@@ -80,13 +85,13 @@ public class MapsFragment extends Fragment {
             mMap.moveCamera(CameraUpdateFactory.newLatLngZoom(SINGAPORE_COORDINATES, 12.f));
 
             // When the map is ready, create a circle listener
-            circleUtil = new CircleUtil(new CircleUtil.CircleUtilListener() {
+            circleUtil.addEventListener(new CircleUtil.CircleUtilListener() {
                 // and listen to each event.
                 @Override
                 public void onCircleReady(ArrayList<User> members) {
                     // if the circle is ready (all data related to the members in the circle has been retrieved)
                     // place the markers at the appropriate places
-                    initializeCircleMarkers(members);
+                    initializeMarkers(members);
                     // set up the recycler view for the bottom sheet
                     setUpRecyclerView(members, circleMemberListener);
                     // show the bottom sheet
@@ -97,12 +102,16 @@ public class MapsFragment extends Fragment {
                 }
                 @Override
                 public void onCircleChange() {
-                    resetCircleMap();
+                    resetMap();
                 }
+            });
+
+            userUtil.addEventListener(new UserUtil.UsersListener() {
+                @Override
+                public void onUserReady() { }
                 @Override
                 public void onUsersChange(@NonNull DataSnapshot snapshot) {
-                    // If any data changed, update the recycler view and markers.
-                    updateCircleMemberLocations(snapshot);
+                    updateLocations(snapshot);
                 }
             });
         }
@@ -112,9 +121,8 @@ public class MapsFragment extends Fragment {
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        if (!CircleUtil.hasLocationPermissions(requireContext())) {
-            requestLocationPermissions();
-        }
+        permissionUtil = new PermissionUtil(requireContext());
+        permissionUtil.requestLocationPermissions();
     }
 
     @Nullable
@@ -138,9 +146,6 @@ public class MapsFragment extends Fragment {
         circleMemberView = view.findViewById(R.id.circleMembersView);
         LinearLayout mBottomSheet = view.findViewById(R.id.circleMemberBottomSheet);
         mBottomSheetBehavior = BottomSheetBehavior.from(mBottomSheet);
-        mBottomSheetBehavior.setHideable(true);
-        mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
-
         circleMemberListener = (v, position) -> {
             /*Options:
             1. When member clicks on member, it shows a full profile of that member
@@ -157,14 +162,16 @@ public class MapsFragment extends Fragment {
             LatLng memberPosition = membersLocation.get(member).getPosition();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberPosition, 16.0f));
             memberList.add(member)
-            // Only show the memebr
+            // Only show the member
             setUpRecyclerView(circleMemberView, memberList, circleMemberListener);
             */
             mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_COLLAPSED);
             User member = circleUtil.getCircleMembers().get(position);
-            LatLng memberPosition = membersLocation.get(member).getPosition();
+            LatLng memberPosition = Objects.requireNonNull(membersLocation.get(member)).getPosition();
             mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberPosition, 16.0f));
         };
+        mBottomSheetBehavior.setHideable(true);
+        mBottomSheetBehavior.setState(BottomSheetBehavior.STATE_HIDDEN);
     }
 
     @Override
@@ -178,11 +185,12 @@ public class MapsFragment extends Fragment {
                 } else {
                     // If somehow one of the permissions are denied, show a permission dialog.
                     Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    showPermissionsDialog(permissions[i]);
+                    permissionUtil.showPermissionsDialog(permissions[i]);
                 }
             }
             // If everything goes well, reset the map, and "restart" the fragment.
-            resetCircleMap();
+            resetMap();
+            assert getFragmentManager() != null;
             getFragmentManager().beginTransaction().detach(this).attach(this).commit();
         }
     }
@@ -195,7 +203,7 @@ public class MapsFragment extends Fragment {
         circleMemberView.setAdapter(adapter);
     }
 
-    private void initializeCircleMarkers(ArrayList<User> circleMembers) {
+    private void initializeMarkers(ArrayList<User> circleMembers) {
         // For each member
         for (User circleMember : circleMembers) {
             // Get their location
@@ -203,14 +211,14 @@ public class MapsFragment extends Fragment {
             // And create a marker with their location
             Marker memberMarker = mMap.addMarker(new MarkerOptions().position(memberLocation).title(circleMember.getFirstName() + "'s Location"));
             // Animate/move the camera to the current member being iterated with a zoom of 15 (if its the user)
-            if (circleMember.getUid().equals(CircleUtil.getCurrentMember().getUid()))
+            if (circleMember.getUid().equals(UserUtil.getCurrentUser().getUid()))
                 mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberLocation, 15.0f));
             // and put it into the hashmap.
             membersLocation.put(circleMember, memberMarker);
         }
     }
 
-    private void updateCircleMemberLocations(@NonNull DataSnapshot snapshot) {
+    private void updateLocations(@NonNull DataSnapshot snapshot) {
         // Create an array list to store newly updated information
         ArrayList<User> newMemberInformation = new ArrayList<>();
         // For each of the data received,
@@ -220,17 +228,11 @@ public class MapsFragment extends Fragment {
                 // Get their current marker and user details
                 Marker currentMemberMarker = circleMembers.getValue();
                 User currentCircleMember = circleMembers.getKey();
-                // Get the user that's the same as the current member ID
                 if (ds.getKey().equals(currentCircleMember.getUid())) {
-                    LatLng dbLocation = new LatLng(ds.child("latitude").getValue(Double.class), ds.child("longitude").getValue(Double.class));
-                    // If their location changed from the initial values,
-                    if (currentCircleMember.getLatitude() != dbLocation.latitude ||
-                            currentCircleMember.getLongitude() != dbLocation.longitude) {
-                        // Update their location details
-                        currentCircleMember.setLatitude(dbLocation.latitude);
-                        currentCircleMember.setLongitude(dbLocation.longitude);
-                        currentCircleMember.updateLastSharingTime();
-                        currentMemberMarker.setPosition(dbLocation);
+                    User newMember = ds.getValue(User.class);
+                    if (UserUtil.didUserChange(currentCircleMember, newMember)) {
+                        UserUtil.updateCurrentUser(currentCircleMember, newMember);
+                        currentMemberMarker.setPosition(newMember.getPosition());
                     }
                     // add the new information to the list.
                     newMemberInformation.add(currentCircleMember);
@@ -238,36 +240,14 @@ public class MapsFragment extends Fragment {
             }
         }
         // update the RecyclerView to match the latest information.
-        adapter.updateInformation(newMemberInformation);
+        if (!newMemberInformation.isEmpty())
+            adapter.updateInformation(newMemberInformation);
     }
 
-    private void resetCircleMap() {
-        // Removes all markers, overlays, and polylines from the map.
+    private void resetMap() {
+        // Removes all markers, overlays, and polyline from the map.
         mMap.clear();
         // clear the hashmap
         membersLocation.clear();
-    }
-
-    private void showPermissionsDialog(String permission) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(requireContext());
-        builder.setTitle("Location Permission")
-                .setMessage("This app needs access to " + permission + " for it to function properly.")
-                .setNegativeButton("CANCEL", (dialog, which) -> Toast.makeText(requireContext(),
-                        "Well.. that's a shame.", Toast.LENGTH_LONG).show())
-                .setPositiveButton("OK", (dialog, which) -> requestLocationPermissions());
-        builder.create().show();
-    }
-
-    private void requestLocationPermissions() {
-        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.Q) {
-            requestPermissions(new String[]
-                    {Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION}, LOCATION_REQUEST_CODE);
-        } else {
-            requestPermissions(new String[]
-                    {Manifest.permission.ACCESS_FINE_LOCATION,
-                            Manifest.permission.ACCESS_COARSE_LOCATION,
-                            Manifest.permission.ACCESS_BACKGROUND_LOCATION}, LOCATION_REQUEST_CODE);
-        }
     }
 }
