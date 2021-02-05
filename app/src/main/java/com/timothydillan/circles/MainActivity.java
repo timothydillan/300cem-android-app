@@ -9,7 +9,6 @@ import android.os.Bundle;
 import android.view.View;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
-import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.database.DataSnapshot;
 import com.timothydillan.circles.Utils.FirebaseUtil;
 import com.timothydillan.circles.Utils.UserUtil;
@@ -57,7 +56,7 @@ public class MainActivity extends AppCompatActivity {
             };
 
     public void onSignOutClick(View v) {
-        FirebaseAuth.getInstance().signOut();
+        FirebaseUtil.signOut();
         Intent signUpActivity = new Intent(this, SignUpActivity.class);
         startActivity(signUpActivity);
         finish();

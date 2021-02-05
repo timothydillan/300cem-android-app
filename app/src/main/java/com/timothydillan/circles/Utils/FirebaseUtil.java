@@ -42,4 +42,9 @@ public class FirebaseUtil {
         return firebaseAuth;
     }
 
+    public static void signOut() {
+        firebaseCurrentUser = null;
+        firebaseAuth.signOut();
+    }
+
 }
