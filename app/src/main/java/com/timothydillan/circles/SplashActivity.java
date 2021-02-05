@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.os.Handler;
 
 import com.timothydillan.circles.Utils.CircleUtil;
+import com.timothydillan.circles.Utils.FirebaseUtil;
 
 public class SplashActivity extends AppCompatActivity {
 
@@ -14,7 +15,7 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
-
+        FirebaseUtil.initializeFirebaseDbAndAuth();
         // postDelayed(Runnable r, Object token, long delayMillis)
         // Causes the Runnable r to be added to the message queue, to be run after the specified amount of time elapses.
         // In here, we override the run method that belongs to the Runnable object and instead load the Main Activity

@@ -1,5 +1,6 @@
 package com.timothydillan.circles;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.fragment.app.Fragment;
 
@@ -9,6 +10,9 @@ import android.view.View;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.auth.FirebaseAuth;
+import com.google.firebase.database.DataSnapshot;
+import com.timothydillan.circles.Utils.FirebaseUtil;
+import com.timothydillan.circles.Utils.UserUtil;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -17,9 +21,22 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        FirebaseUtil.initializeCurrentFirebaseUser();
+        UserUtil userUtil = new UserUtil();
         final BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
-        bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
-        getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new MapsFragment()).commit();
+        userUtil.addEventListener(new UserUtil.UsersListener() {
+            @Override
+            public void onUserReady() {
+                bottomNavigationView.setOnNavigationItemSelectedListener(navListener);
+                getSupportFragmentManager().beginTransaction().replace(R.id.fragment, new MapsFragment()).commit();
+            }
+
+            @Override
+            public void onUsersChange(@NonNull DataSnapshot snapshot) {
+
+            }
+        });
+        userUtil.initializeCurrentUser();
     }
 
     private final BottomNavigationView.OnNavigationItemSelectedListener navListener =
