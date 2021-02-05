@@ -50,7 +50,11 @@ public class CMemberRecyclerAdapter extends RecyclerView.Adapter<CMemberRecycler
 
         @Override
         public void onClick(View v) {
-            listener.onClick(v, getAdapterPosition());
+            int memberClickedIndex = getAdapterPosition();
+            // May return NO_POSITION as the RecylerView layout changes, need to do a sanity check
+            // so that it doesn't crash.
+            if (memberClickedIndex != RecyclerView.NO_POSITION)
+                listener.onClick(v, memberClickedIndex);
         }
     }
 
