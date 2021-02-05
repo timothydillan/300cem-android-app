@@ -29,10 +29,13 @@ import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.Utils.CircleUtil;
+import com.timothydillan.circles.Utils.FirebaseUtil;
+import com.timothydillan.circles.Utils.UserUtil;
 
 import java.util.ArrayList;
 
@@ -42,6 +45,7 @@ public class EditProfileActivity extends AppCompatActivity {
     private static final String DATE_PICKER_TAG = "DATE_PICKER";
     private static final String FIREBASE_TAG = "firebaseRelated";
     private static final int GALLERY_REQUEST_CODE = 102;
+    private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
 
     // Views
     private ImageView profileImageView;
@@ -57,13 +61,14 @@ public class EditProfileActivity extends AppCompatActivity {
     private Uri imageUri = null;
 
     // Misc
-    private User currentMember;
+    private CircleUtil circleUtil = new CircleUtil();
+    private UserUtil userUtil = new UserUtil();
+    private User currentMember = UserUtil.getCurrentUser();
     private String firstName;
     private String lastName;
     private String gender;
     private String birthDate;
     private int TEN_DP;
-    private static boolean initializeImage = false;
 
     // Storage
     private StorageReference storageReference;
@@ -81,16 +86,23 @@ public class EditProfileActivity extends AppCompatActivity {
         // TODO: use sharedpreferences instead.
         // TODO: profile pic
 
-        new CircleUtil(new CircleUtil.CircleUtilListener() {
+        circleUtil.addEventListener(new CircleUtil.CircleUtilListener() {
             @Override
             public void onCircleReady(ArrayList<User> members) { }
             @Override
             public void onCircleChange() { }
+        });
+
+        userUtil.addEventListener(new UserUtil.UsersListener() {
+            @Override
+            public void onUserReady() { }
+
             @Override
             public void onUsersChange(@NonNull DataSnapshot snapshot) {
                 updateUserProfile(snapshot);
             }
         });
+
 
         Toolbar toolbar = findViewById(R.id.editDetailsToolbar);
         setSupportActionBar(toolbar);
@@ -99,7 +111,6 @@ public class EditProfileActivity extends AppCompatActivity {
         dateBuilder.setTitleText("SELECT YOUR BIRTH DATE");
         datePicker = dateBuilder.build();
 
-        currentMember = CircleUtil.getCurrentMember();
         profileImageView = findViewById(R.id.profileImageView);
         firstNameEditText = findViewById(R.id.firstNameEditText);
         lastNameEditText = findViewById(R.id.lastNameEditText);
@@ -154,9 +165,8 @@ public class EditProfileActivity extends AppCompatActivity {
         addInfoChip.setVisibility(currentMember.getBirthDate().isEmpty()
                 || currentMember.getGender().isEmpty() ? View.VISIBLE : View.GONE);
 
-        if (!currentMember.getProfilePicUrl().isEmpty() && imageUri == null && !initializeImage) {
+        if (!currentMember.getProfilePicUrl().isEmpty() && imageUri == null) {
             Glide.with(this).load(currentMember.getProfilePicUrl()).into(profileImageView);
-            initializeImage = true;
         }
 
         ((ViewGroup.MarginLayoutParams) saveChip.getLayoutParams()).setMarginStart(
@@ -169,42 +179,28 @@ public class EditProfileActivity extends AppCompatActivity {
         final User oldUser = currentMember;
         final Uri oldImage = Uri.parse(currentMember.getProfilePicUrl());
         Log.d(FIREBASE_TAG, String.valueOf(oldUser));
-        CircleUtil.databaseReference.child("Users").child(currentMember.getUid()).child("firstName").setValue(firstName);
-        CircleUtil.databaseReference.child("Users").child(currentMember.getUid()).child("lastName").setValue(lastName);
-        CircleUtil.databaseReference.child("Users").child(currentMember.getUid()).child("gender").setValue(gender);
-        CircleUtil.databaseReference.child("Users").child(currentMember.getUid()).child("birthDate").setValue(birthDate);
+        databaseReference.child("Users").child(currentMember.getUid()).child("firstName").setValue(firstName);
+        databaseReference.child("Users").child(currentMember.getUid()).child("lastName").setValue(lastName);
+        databaseReference.child("Users").child(currentMember.getUid()).child("gender").setValue(gender);
+        databaseReference.child("Users").child(currentMember.getUid()).child("birthDate").setValue(birthDate);
         if (imageUri != null) {
             uploadProfilePicture(imageUri);
             imageUri = null;
         }
-        Snackbar successSnackbar = Snackbar.make(findViewById(android.R.id.content), "Successfully updated your profile.", Snackbar.LENGTH_LONG);
+        Snackbar successSnackbar = Snackbar.make(findViewById(android.R.id.content),
+                "Successfully updated your profile.", Snackbar.LENGTH_LONG);
         successSnackbar.setAction("Revert", v1 -> {
-            CircleUtil.databaseReference.child("Users").child(currentMember.getUid()).setValue(oldUser);
+            databaseReference.child("Users").child(currentMember.getUid()).setValue(oldUser);
             if (oldImage != null)
-                uploadProfilePicture(imageUri);
+                uploadProfilePicture(oldImage);
         });
         successSnackbar.show();
     }
 
     private void updateUserProfile(DataSnapshot snapshot) {
-        if (!snapshot.child(currentMember.getUid()).child("firstName").getValue(String.class)
-                .equals(currentMember.getFirstName())
-                || !snapshot.child(currentMember.getUid()).child("lastName").getValue(String.class)
-                .equals(currentMember.getLastName())
-                || !snapshot.child(currentMember.getUid()).child("email").getValue(String.class)
-                .equals(currentMember.getEmail())
-                || !snapshot.child(currentMember.getUid()).child("phone").getValue(String.class)
-                .equals(currentMember.getPhone())
-                || !snapshot.child(currentMember.getUid()).child("birthDate").getValue(String.class)
-                .equals(currentMember.getBirthDate())
-                || !snapshot.child(currentMember.getUid()).child("gender").getValue(String.class)
-                .equals(currentMember.getGender())
-                || !snapshot.child(currentMember.getUid()).child("profilePicUrl").getValue(String.class)
-                .equals(currentMember.getProfilePicUrl())) {
-            User user = snapshot.child(currentMember.getUid()).getValue(User.class);
-            CircleUtil.updateCurrentMember(user);
-            updateProfileViews();
-        }
+        User user = snapshot.child(currentMember.getUid()).getValue(User.class);
+        UserUtil.updateCurrentUser(user);
+        updateProfileViews();
     }
 
     private void initializeChangeListeners() {
@@ -297,12 +293,11 @@ public class EditProfileActivity extends AppCompatActivity {
             UserProfileChangeRequest request = new UserProfileChangeRequest.Builder()
                     .setPhotoUri(uri)
                     .build();
-            CircleUtil.currentUser.updateProfile(request).addOnSuccessListener(aVoid -> {
+            FirebaseUtil.getCurrentUser().updateProfile(request).addOnSuccessListener(aVoid -> {
                 Log.d(FIREBASE_TAG, "Successfully updated profile image.");
-                String profilePicUrl = String.valueOf(CircleUtil.currentUser.getPhotoUrl());
-                CircleUtil.databaseReference.child("Users").child(currentMember.getUid())
+                String profilePicUrl = String.valueOf(FirebaseUtil.getCurrentUser().getPhotoUrl());
+                databaseReference.child("Users").child(currentMember.getUid())
                         .child("profilePicUrl").setValue(profilePicUrl);
-                initializeImage = false;
             });
         });
     }

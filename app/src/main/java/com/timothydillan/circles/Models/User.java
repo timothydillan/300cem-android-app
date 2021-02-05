@@ -1,5 +1,7 @@
 package com.timothydillan.circles.Models;
 
+import com.google.android.gms.maps.model.LatLng;
+
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -120,5 +122,9 @@ public class User {
 
     public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
+    }
+
+    public LatLng getPosition() {
+        return new LatLng(getLatitude(), getLongitude());
     }
 }
