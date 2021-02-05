@@ -18,6 +18,7 @@ import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.FirebaseDatabase;
 import com.timothydillan.circles.Models.Circle;
 import com.timothydillan.circles.Models.User;
+import com.timothydillan.circles.Utils.FirebaseUtil;
 
 import org.w3c.dom.Text;
 
@@ -26,11 +27,18 @@ import java.util.Random;
 
 public class SignUpActivity extends ActivityInterface {
 
-    private final String TAG = "FIREBASE_AUTH";
-    private TextInputLayout firstNameInput, lastNameInput, phoneInput, emailInput, passwordInput;
-    private String firstName, lastName, phone, email, password;
-    private FirebaseAuth firebaseAuth;
-    private FirebaseUser currentUser;
+    private final String TAG = "SignUpActivity";
+    private TextInputLayout firstNameInput;
+    private TextInputLayout lastNameInput;
+    private TextInputLayout phoneInput;
+    private TextInputLayout emailInput;
+    private TextInputLayout passwordInput;
+    private String firstName;
+    private String lastName;
+    private String phone;
+    private String email;
+    private String password;
+    private FirebaseAuth firebaseAuth = FirebaseUtil.getFirebaseAuth();
     private final HashMap<TextInputLayout, String> textInputs = new HashMap<>();
 
     @Override
@@ -38,8 +46,7 @@ public class SignUpActivity extends ActivityInterface {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_up);
 
-        // Initialize Firebase Auth
-        firebaseAuth = FirebaseAuth.getInstance();
+        FirebaseUtil.initializeCurrentFirebaseUser();
 
         // Assign inputs to corresponding XML ids
         firstNameInput = findViewById(R.id.firstNameInputLayout);
@@ -53,8 +60,7 @@ public class SignUpActivity extends ActivityInterface {
     protected void onStart() {
         super.onStart();
         // Check if user is signed in (non-null) and update UI accordingly.
-        currentUser = firebaseAuth.getCurrentUser();
-        if (currentUser != null)
+        if (FirebaseUtil.getCurrentUser() != null)
             goToMainActivity();
     }
 
@@ -70,7 +76,7 @@ public class SignUpActivity extends ActivityInterface {
                         Log.d(TAG, "createUserWithEmail:success");
 
                         // Get the current user
-                        currentUser = firebaseAuth.getCurrentUser();
+                        String USER_UID = FirebaseUtil.getCurrentUser().getUid();
 
                         // Generate a random 6-digit code
                         int circleCode = new Random().nextInt(999999);
@@ -79,16 +85,16 @@ public class SignUpActivity extends ActivityInterface {
                         Circle newCircle = new Circle("Admin");
 
                         // Create a new user with the current session being on the current circle
-                        User newUser = new User(currentUser.getUid(), firstName, lastName, email, phone, circleCode);
+                        User newUser = new User(USER_UID, firstName, lastName, email, phone, circleCode);
 
                         FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
                                 .child("name").setValue(firstName + "'s Circle");
 
                         FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
-                                .child("Members").child(currentUser.getUid()).setValue(newCircle);
+                                .child("Members").child(USER_UID).setValue(newCircle);
 
                         // Add user details to the database
-                        FirebaseDatabase.getInstance().getReference("Users").child(currentUser.getUid())
+                        FirebaseDatabase.getInstance().getReference("Users").child(USER_UID)
                                 .setValue(newUser).addOnCompleteListener(new OnCompleteListener<Void>() {
                             @Override
                             public void onComplete(@NonNull Task<Void> task) {

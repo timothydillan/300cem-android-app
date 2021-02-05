@@ -12,16 +12,15 @@ import com.timothydillan.circles.UI.ProgressButton;
 
 public class FirebaseUtil {
     private static DatabaseReference firebaseDatabaseReference = null;
-    private static FirebaseAuth firebaseAuth;
+    private static FirebaseAuth firebaseAuth = null;
     private static FirebaseUser firebaseCurrentUser = null;
 
     public static void initializeFirebaseDbAndAuth() {
-        if (firebaseDatabaseReference != null) {
+        if (firebaseDatabaseReference != null && firebaseAuth != null) {
             return;
         }
         firebaseAuth = FirebaseAuth.getInstance();
         firebaseDatabaseReference = FirebaseDatabase.getInstance().getReference();
-        System.out.println(firebaseDatabaseReference);
     }
 
     public static void initializeCurrentFirebaseUser() {
@@ -29,7 +28,6 @@ public class FirebaseUtil {
             return;
         }
         firebaseCurrentUser = firebaseAuth.getCurrentUser();
-        System.out.println(firebaseCurrentUser);
     }
 
     public static DatabaseReference getDbReference() {
@@ -38,6 +36,10 @@ public class FirebaseUtil {
 
     public static FirebaseUser getCurrentUser() {
         return firebaseCurrentUser;
+    }
+
+    public static FirebaseAuth getFirebaseAuth() {
+        return firebaseAuth;
     }
 
 }

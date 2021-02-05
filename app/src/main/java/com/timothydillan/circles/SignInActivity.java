@@ -1,34 +1,25 @@
 package com.timothydillan.circles;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.appcompat.app.AppCompatActivity;
-
 import android.content.Intent;
-import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
-import android.widget.Toast;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.AuthResult;
 import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.database.FirebaseDatabase;
 import com.timothydillan.circles.UI.ProgressButton;
+import com.timothydillan.circles.Utils.FirebaseUtil;
 
 public class SignInActivity extends ActivityInterface {
 
     private final String TAG = "FIREBASE_AUTH";
-    private TextInputLayout emailInput, passwordInput;
-    private String email, password;
-    private FirebaseAuth firebaseAuth;
+    private TextInputLayout emailInput;
+    private TextInputLayout passwordInput;
+    private String email;
+    private String password;
+    private FirebaseAuth firebaseAuth = FirebaseUtil.getFirebaseAuth();
     private View signInButton;
     private ProgressButton progressButton;
 
@@ -36,9 +27,6 @@ public class SignInActivity extends ActivityInterface {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
-
-        // Initialize Firebase Auth
-        firebaseAuth = FirebaseAuth.getInstance();
 
         // Assign inputs to corresponding XML ids
         emailInput = findViewById(R.id.emailInputLayout);
@@ -57,20 +45,20 @@ public class SignInActivity extends ActivityInterface {
         progressButton.onLoading();
 
         firebaseAuth.signInWithEmailAndPassword(email, password)
-                .addOnFailureListener(this, e -> progressButton.onFailed())
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        // Sign in success
-                        Log.d(TAG, "signInWithEmail:success");
-                        progressButton.onFinished();
-                        new Handler().postDelayed(() -> goToMainActivity(), 1500);
-                    } else {
-                        // If sign in fails
-                        Log.w(TAG, "signInWithEmail:failure", task.getException());
-                        Snackbar.make(findViewById(android.R.id.content), "Your password or e-mail may be invalid.", Snackbar.LENGTH_LONG).show();
-                        progressButton.onFailed();
-                    }
-                });
+            .addOnFailureListener(this, e -> progressButton.onFailed())
+            .addOnCompleteListener(this, task -> {
+                if (task.isSuccessful()) {
+                    // Sign in success
+                    Log.d(TAG, "signInWithEmail:success");
+                    progressButton.onFinished();
+                    new Handler().postDelayed(() -> goToMainActivity(), 1500);
+                } else {
+                    // If sign in fails
+                    Log.w(TAG, "signInWithEmail:failure", task.getException());
+                    Snackbar.make(findViewById(android.R.id.content), "Your password or e-mail may be invalid.", Snackbar.LENGTH_LONG).show();
+                    progressButton.onFailed();
+                }
+            });
 
     }
 
