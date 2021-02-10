@@ -162,21 +162,14 @@
                 android:inputType="textPassword" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <Button
+        <include
             android:id="@+id/signUpButton"
-            style="@style/Widget.MaterialComponents.Button.UnelevatedButton"
-            android:layout_width="match_parent"
-            android:layout_height="60dp"
-            android:layout_marginTop="@dimen/margin_top"
             android:layout_marginStart="30dp"
             android:layout_marginEnd="30dp"
-            android:textColor="@color/white"
-            android:onClick="onSignUpButtonClick"
-            android:backgroundTint="#5B9CE6"
-            android:text="@string/signup_button"
-            android:fontFamily="@font/dmsans_medium"
-            android:textSize="18sp"
-            app:cornerRadius="10dp" />
+            android:layout_marginTop="@dimen/margin_top"
+            layout="@layout/progress_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -227,6 +220,9 @@
                 android:layout_weight="1"
                 app:cardCornerRadius="10dp"
                 android:layout_marginEnd="10dp"
+                android:clickable="true"
+                android:focusable="true"
+                android:onClick="googleSignIn"
                 android:backgroundTint="@color/card_border_color"
                 android:layout_height="wrap_content">
                 <LinearLayout
