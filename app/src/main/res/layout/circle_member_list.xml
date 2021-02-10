@@ -13,37 +13,52 @@
         android:layout_marginStart="16dp"
         android:layout_marginTop="16dp"
         android:layout_marginBottom="16dp"
-        android:fontFamily="sans-serif"
+        android:fontFamily="@font/dmsans_medium"
         android:text="TextView"
         android:textColor="@color/primary_text"
-        android:textSize="18sp"
-        android:textStyle="bold"
+        android:textSize="20sp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toEndOf="@+id/memberImage"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.218"
         tools:text="Alice Doe" />
 
-    <com.google.android.material.imageview.ShapeableImageView
+    <com.google.android.material.card.MaterialCardView
         android:id="@+id/memberImage"
         android:layout_width="71dp"
-        android:layout_height="74dp"
+        android:layout_height="71dp"
+        app:cardElevation="0dp"
         android:layout_marginStart="26dp"
         android:layout_marginTop="30dp"
         android:layout_marginBottom="16dp"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
-        app:shapeAppearanceOverlay="@style/circularImageView"
-        app:srcCompat="@drawable/logo" />
+        app:cardCornerRadius="50dp"
+        app:cardPreventCornerOverlap="false">
+        <com.android.volley.toolbox.NetworkImageView
+            android:id="@+id/memberImageView"
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:adjustViewBounds="true"
+            android:scaleType="centerCrop"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent" />
+    </com.google.android.material.card.MaterialCardView>
 
     <TextView
-        android:id="@+id/lastLocationMember"
-        android:layout_width="wrap_content"
+        android:id="@+id/memberLocation"
+        android:layout_width="300dp"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/dmsans"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
-        android:text="Last seen at Lorem Ipsum"
+        android:paddingRight="16dp"
+        android:layout_marginTop="6dp"
+        android:textSize="13sp"
+        android:ellipsize="end"
+        android:text="Near Jl. Raya Uluwatu No.1x, Ungasan, Kabupaten Badung OKOKOK"
+        android:maxLines="1"
         android:textColor="@color/primary_text"
         app:layout_constraintStart_toEndOf="@+id/memberImage"
         app:layout_constraintTop_toBottomOf="@+id/memberName" />
@@ -52,10 +67,12 @@
         android:id="@+id/lastSeenMember"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:fontFamily="@font/dmsans"
         android:layout_marginStart="16dp"
-        android:layout_marginTop="4dp"
+        android:layout_marginTop="8dp"
+        android:textSize="13sp"
         android:text="Since 10.30"
         android:textColor="@color/primary_text"
         app:layout_constraintStart_toEndOf="@+id/memberImage"
-        app:layout_constraintTop_toBottomOf="@+id/lastLocationMember" />
+        app:layout_constraintTop_toBottomOf="@+id/memberLocation" />
 </androidx.constraintlayout.widget.ConstraintLayout>

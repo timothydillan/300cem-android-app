@@ -1,19 +1,17 @@
 package com.timothydillan.circles;
 
 import androidx.annotation.NonNull;
-import androidx.appcompat.app.AppCompatActivity;
+import androidx.appcompat.widget.Toolbar;
 
-import android.content.Intent;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.MenuItem;
 import android.view.View;
-import android.widget.Toast;
 
 import com.google.android.gms.tasks.OnCompleteListener;
 import com.google.android.gms.tasks.Task;
+import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
@@ -21,23 +19,33 @@ import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.timothydillan.circles.Models.Circle;
 import com.timothydillan.circles.Models.User;
+import com.timothydillan.circles.Utils.CircleUtil;
+import com.timothydillan.circles.Utils.UserUtil;
+
+import java.util.ArrayList;
 
 public class JoinCircleActivity extends ActivityInterface {
-
-    private DatabaseReference databaseReference;
+    private static final String TAG = "JoinCircleActivity";
     private TextInputLayout circleInput;
-    private FirebaseAuth firebaseAuth;
-    private FirebaseUser currentUser;
+    private CircleUtil circleUtil = new CircleUtil();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join_circle);
 
+        Toolbar toolbar = findViewById(R.id.joinToolbar);
+        setSupportActionBar(toolbar);
+        getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+
         circleInput = findViewById(R.id.circleCodeInputLayout);
-        firebaseAuth = FirebaseAuth.getInstance();
-        currentUser = firebaseAuth.getCurrentUser();
-        databaseReference = FirebaseDatabase.getInstance().getReference();
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(@NonNull MenuItem item) {
+        if (item.getItemId() == android.R.id.home)
+            finish();
+        return super.onOptionsItemSelected(item);
     }
 
     public void onJoinButtonClick(View v) {
@@ -53,41 +61,27 @@ public class JoinCircleActivity extends ActivityInterface {
             circleInput.setErrorEnabled(false);
         }
 
-        databaseReference.child("Circles").child(circleCode).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (!snapshot.exists()) {
-                    Toast.makeText(JoinCircleActivity.this, "Circle doesn't exist.",
-                            Toast.LENGTH_SHORT).show();
-                    return;
-                }
-                Circle newCircle = new Circle("Member");
-                databaseReference.child("Circles").child(circleCode).child("Members").child(currentUser.getUid()).setValue(newCircle).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Toast.makeText(JoinCircleActivity.this, "Successfully joined a circle.",
-                                    Toast.LENGTH_SHORT).show();
-                            databaseReference.child("Users").child(currentUser.getUid()).child("currentCircleSession").setValue(Double.parseDouble(circleCode));
-                            goToMainActivity();
-                        } else {
-                            Toast.makeText(JoinCircleActivity.this, "Failed joining a circle.",
-                                    Toast.LENGTH_SHORT).show();
-                        }
-                    }
-                });
-            }
+        circleUtil.joinCircle(circleCode);
 
+        circleUtil.addEventListener(new CircleUtil.CircleUtilListener() {
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.w("firebaseRelated", "failed.");
+            public void onCircleReady(ArrayList<User> members) { }
+            @Override
+            public void onCircleChange() { }
+            @Override
+            public void onJoinCircle(boolean success) {
+                if (success) {
+                    Log.d(TAG, "Successfully joined the circle.");
+                    showSnackbar("Successfully joined the circle.");
+                } else {
+                    Log.d(TAG, "Failed to join the circle.");
+                    showSnackbar("Failed to join the circle.");
+                }
             }
         });
-
     }
 
-    @Override
-    void onTextClick(View v) {
-
+    private void showSnackbar(String message) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
 }
