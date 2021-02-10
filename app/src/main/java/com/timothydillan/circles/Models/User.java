@@ -11,15 +11,15 @@ public class User {
     public String firstName;
     public String lastName;
     public String email;
-    public String phone;
+    public String phone = "";
     public int currentCircleSession;
     public double latitude;
     public double longitude;
     public String lastSharingTime;
-    public String gender;
-    public String birthDate;
+    public String gender = "";
+    public String birthDate = "";
     public String uid;
-    public String profilePicUrl;
+    public String profilePicUrl = "";
 
     public User() {
 
@@ -31,6 +31,15 @@ public class User {
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
+        this.currentCircleSession = currentCircleSession;
+        this.lastSharingTime = getCurrentDateAndTime();
+    }
+
+    public User(String uid, String firstName, String lastName, String email, int currentCircleSession) {
+        this.uid = uid;
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
         this.currentCircleSession = currentCircleSession;
         this.lastSharingTime = getCurrentDateAndTime();
     }
@@ -68,7 +77,9 @@ public class User {
         return dateFormat.format(new Date());
     }
 
-    public String getFullName() {return firstName + " " + lastName;}
+    public void setCurrentCircleSession(int currentCircleSession) {
+        this.currentCircleSession = currentCircleSession;
+    }
 
     public String getFirstName() {
         return firstName;
@@ -122,9 +133,5 @@ public class User {
 
     public void setBirthDate(String birthDate) {
         this.birthDate = birthDate;
-    }
-
-    public LatLng getPosition() {
-        return new LatLng(getLatitude(), getLongitude());
     }
 }
