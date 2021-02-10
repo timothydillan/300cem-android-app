@@ -132,16 +132,26 @@
                         android:layout_width="match_parent"
                         android:layout_height="match_parent">
 
-                        <com.google.android.material.imageview.ShapeableImageView
-                            android:id="@+id/profileImageView"
+                        <com.google.android.material.card.MaterialCardView
                             android:layout_width="71dp"
-                            android:layout_height="74dp"
+                            android:layout_height="71dp"
+                            app:cardElevation="0dp"
                             android:layout_marginTop="4dp"
                             app:layout_constraintBottom_toBottomOf="parent"
                             app:layout_constraintStart_toStartOf="parent"
                             app:layout_constraintTop_toTopOf="parent"
-                            app:shapeAppearanceOverlay="@style/CircularImageStyle"
-                            app:srcCompat="@drawable/logo" />
+                            app:cardCornerRadius="50dp"
+                            app:cardPreventCornerOverlap="false">
+                            <com.android.volley.toolbox.NetworkImageView
+                                android:id="@+id/profileImageView"
+                                android:layout_width="match_parent"
+                                android:layout_height="match_parent"
+                                android:adjustViewBounds="true"
+                                android:scaleType="centerCrop"
+                                app:layout_constraintBottom_toBottomOf="parent"
+                                app:layout_constraintStart_toStartOf="parent"
+                                app:layout_constraintTop_toTopOf="parent" />
+                        </com.google.android.material.card.MaterialCardView>
 
                         <ImageView
                             android:layout_width="wrap_content"
@@ -259,6 +269,7 @@
                             android:fontFamily="@font/dmsans"
                             android:onClick="toast"
                             android:text="Add more info"
+                            android:textAppearance="@style/ChipStyle"
                             android:textColor="@color/chip_text_color"
                             app:chipBackgroundColor="@color/chip_bg_color"
                             app:chipIcon="@drawable/ic_baseline_add_circle_24"
@@ -272,9 +283,9 @@
                             android:layout_height="wrap_content"
                             android:layout_marginTop="@dimen/margin_top"
                             android:layout_marginBottom="@dimen/margin_top"
-                            android:fontFamily="@font/dmsans"
                             android:onClick="onSaveButtonClick"
                             android:text="Save"
+                            android:textAppearance="@style/ChipStyle"
                             android:textColor="@color/chip_disabled_text_color"
                             app:chipBackgroundColor="@color/chip_disabled_color"
                             app:chipIconTint="@color/chip_icon_color"

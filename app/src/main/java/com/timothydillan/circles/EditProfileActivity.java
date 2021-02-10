@@ -23,21 +23,16 @@ import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.android.volley.toolbox.ImageLoader;
+import com.android.volley.toolbox.NetworkImageView;
 import com.bumptech.glide.Glide;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.snackbar.Snackbar;
-import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.storage.FirebaseStorage;
-import com.google.firebase.storage.StorageReference;
 import com.timothydillan.circles.Models.User;
-import com.timothydillan.circles.Utils.CircleUtil;
-import com.timothydillan.circles.Utils.FirebaseUtil;
+import com.timothydillan.circles.UI.VolleyImageRequest;
 import com.timothydillan.circles.Utils.UserUtil;
-
-import java.util.ArrayList;
 
 public class EditProfileActivity extends AppCompatActivity {
 
@@ -45,10 +40,11 @@ public class EditProfileActivity extends AppCompatActivity {
     private static final String DATE_PICKER_TAG = "DATE_PICKER";
     private static final String FIREBASE_TAG = "firebaseRelated";
     private static final int GALLERY_REQUEST_CODE = 102;
-    private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
+    private static ImageLoader imageLoader;
 
     // Views
-    private ImageView profileImageView;
+    //private ImageView profileImageView;
+    private NetworkImageView profileImageView;
     private EditText firstNameEditText;
     private EditText lastNameEditText;
     private AutoCompleteTextView genderDropdown;
@@ -62,7 +58,6 @@ public class EditProfileActivity extends AppCompatActivity {
     private Uri imageUri = null;
 
     // Misc
-    private CircleUtil circleUtil = new CircleUtil();
     private UserUtil userUtil = new UserUtil();
     private User currentMember = UserUtil.getCurrentUser();
     private String firstName;
@@ -71,39 +66,24 @@ public class EditProfileActivity extends AppCompatActivity {
     private String birthDate;
     private int TEN_DP;
 
-    // Storage
-    private StorageReference storageReference;
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
-        storageReference = FirebaseStorage.getInstance().getReference();
-
         float dpRatio = getResources().getDisplayMetrics().density;
         TEN_DP = (int) (10 * dpRatio);
 
-        // TODO: use sharedpreferences instead.
-        // TODO: profile pic
-
-        circleUtil.addEventListener(new CircleUtil.CircleUtilListener() {
-            @Override
-            public void onCircleReady(ArrayList<User> members) { }
-            @Override
-            public void onCircleChange() { }
-        });
+        imageLoader = VolleyImageRequest.getInstance(this).getImageLoader();
 
         userUtil.addEventListener(new UserUtil.UsersListener() {
             @Override
             public void onUserReady() { }
-
             @Override
             public void onUsersChange(@NonNull DataSnapshot snapshot) {
                 updateUserProfile(snapshot);
             }
         });
-
 
         Toolbar toolbar = findViewById(R.id.editDetailsToolbar);
         setSupportActionBar(toolbar);
@@ -166,9 +146,15 @@ public class EditProfileActivity extends AppCompatActivity {
         addInfoChip.setVisibility(currentMember.getBirthDate().isEmpty()
                 || currentMember.getGender().isEmpty() ? View.VISIBLE : View.GONE);
 
-        if (!currentMember.getProfilePicUrl().isEmpty() && imageUri == null) {
-            Glide.with(this).load(currentMember.getProfilePicUrl()).into(profileImageView);
+        String profilePicUrl = currentMember.getProfilePicUrl();
+        if (!profilePicUrl.isEmpty() && imageUri == null) {
+            imageLoader.get(profilePicUrl, ImageLoader.getImageListener(profileImageView, R.drawable.logo, android.R.drawable.ic_dialog_alert));
+            profileImageView.setImageUrl(profilePicUrl, imageLoader);
         }
+
+        /*if (!currentMember.getProfilePicUrl().isEmpty() && imageUri == null && activityIsValid()) {
+            Glide.with(this).load(currentMember.getProfilePicUrl()).into(profileImageView);
+        }*/
 
         ((ViewGroup.MarginLayoutParams) saveChip.getLayoutParams()).setMarginStart(
                 addInfoChip.getVisibility() == View.VISIBLE ? TEN_DP : 0);
@@ -180,22 +166,31 @@ public class EditProfileActivity extends AppCompatActivity {
         final User oldUser = currentMember;
         final Uri oldImage = Uri.parse(currentMember.getProfilePicUrl());
         Log.d(FIREBASE_TAG, String.valueOf(oldUser));
-        databaseReference.child("Users").child(currentMember.getUid()).child("firstName").setValue(firstName);
-        databaseReference.child("Users").child(currentMember.getUid()).child("lastName").setValue(lastName);
-        databaseReference.child("Users").child(currentMember.getUid()).child("gender").setValue(gender);
-        databaseReference.child("Users").child(currentMember.getUid()).child("birthDate").setValue(birthDate);
+        saveNewUserInformation();
         if (imageUri != null) {
-            uploadProfilePicture(imageUri);
+            userUtil.setNewProfilePicture(imageUri);
             imageUri = null;
         }
         Snackbar successSnackbar = Snackbar.make(findViewById(android.R.id.content),
                 "Successfully updated your profile.", Snackbar.LENGTH_LONG);
         successSnackbar.setAction("Revert", v1 -> {
-            databaseReference.child("Users").child(currentMember.getUid()).setValue(oldUser);
-            if (oldImage != null)
-                uploadProfilePicture(oldImage);
+            userUtil.updateDbUser(oldUser);
+            if (oldImage != null) {
+                userUtil.setNewProfilePicture(oldImage);
+            }
         });
         successSnackbar.show();
+    }
+
+    private void saveNewUserInformation() {
+        userUtil.updateDbUserFirstName(firstName);
+        userUtil.updateDbUserLastName(lastName);
+        userUtil.updateDbUserBirthDate(birthDate);
+        userUtil.updateDbUserGender(gender);
+    }
+
+    public boolean activityIsValid() {
+        return !this.isFinishing() && !this.isDestroyed();
     }
 
     private void updateUserProfile(DataSnapshot snapshot) {
@@ -270,7 +265,8 @@ public class EditProfileActivity extends AppCompatActivity {
     }
 
     private void changeChipColor() {
-        saveChip.setChipBackgroundColor(didAnyFieldChange() ? AppCompatResources.getColorStateList(getApplicationContext(), R.color.chip_bg_color)
+        saveChip.setChipBackgroundColor(didAnyFieldChange() ?
+                AppCompatResources.getColorStateList(getApplicationContext(), R.color.chip_bg_color)
                 : AppCompatResources.getColorStateList(getApplicationContext(), R.color.chip_disabled_color));
         saveChip.setTextColor(didAnyFieldChange() ? getResources().getColor(R.color.chip_text_color)
                 : getResources().getColor(R.color.chip_disabled_text_color));
@@ -280,27 +276,6 @@ public class EditProfileActivity extends AppCompatActivity {
         Intent galleryIntent = new Intent(Intent.ACTION_GET_CONTENT);
         galleryIntent.setType("image/*");
         startActivityForResult(galleryIntent, GALLERY_REQUEST_CODE);
-    }
-
-    private void uploadProfilePicture(Uri imageUri) {
-        StorageReference userStorageReference = storageReference.child("images/profileImages/" + currentMember.getUid());
-        userStorageReference.putFile(imageUri)
-                .addOnSuccessListener(taskSnapshot -> setProfilePicture(userStorageReference))
-                .addOnFailureListener(exception -> Log.d(FIREBASE_TAG, "Failed to upload image."));
-    }
-
-    private void setProfilePicture(StorageReference reference) {
-        reference.getDownloadUrl().addOnSuccessListener(uri -> {
-            UserProfileChangeRequest request = new UserProfileChangeRequest.Builder()
-                    .setPhotoUri(uri)
-                    .build();
-            FirebaseUtil.getCurrentUser().updateProfile(request).addOnSuccessListener(aVoid -> {
-                Log.d(FIREBASE_TAG, "Successfully updated profile image.");
-                String profilePicUrl = String.valueOf(FirebaseUtil.getCurrentUser().getPhotoUrl());
-                databaseReference.child("Users").child(currentMember.getUid())
-                        .child("profilePicUrl").setValue(profilePicUrl);
-            });
-        });
     }
 
     public void toast(View v) {
