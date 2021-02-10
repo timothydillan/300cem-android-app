@@ -22,7 +22,7 @@
             android:fontFamily="@font/dmsans_bold"
             android:text="Settings"
             android:textColor="@color/primary_text"
-            android:textSize="48sp" />
+            android:textSize="36sp" />
 
         <TextView
             android:layout_width="wrap_content"
@@ -38,8 +38,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top"
             android:layout_marginEnd="@dimen/margin_right"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/card_border_color"
+            app:cardElevation="8dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/logo_color_red"
             app:cardBackgroundColor="@color/card_color"
             app:cardCornerRadius="8dp">
 
@@ -64,8 +65,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top"
             android:layout_marginEnd="@dimen/margin_right"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/card_border_color"
+            app:cardElevation="8dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/logo_color_green"
             app:cardBackgroundColor="@color/card_color"
             app:cardCornerRadius="8dp">
 
@@ -90,8 +92,9 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="@dimen/margin_top"
             android:layout_marginEnd="@dimen/margin_right"
-            app:strokeWidth="1dp"
-            app:strokeColor="@color/card_border_color"
+            app:cardElevation="8dp"
+            app:strokeWidth="2dp"
+            app:strokeColor="@color/logo_color_blue"
             app:cardBackgroundColor="@color/card_color"
             app:cardCornerRadius="8dp">
 
