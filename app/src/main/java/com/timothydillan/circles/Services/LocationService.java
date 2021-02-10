@@ -1,11 +1,13 @@
 package com.timothydillan.circles.Services;
 
 import android.annotation.SuppressLint;
+import android.app.ActivityManager;
 import android.app.Notification;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.app.Service;
+import android.content.Context;
 import android.content.Intent;
 import android.location.Location;
 import android.os.Build;
@@ -32,7 +34,7 @@ import com.timothydillan.circles.Utils.UserUtil;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
-public class LocationService extends Service {
+public class LocationService extends Services {
     private static final String CHANNEL_ID = "circlesLocationChannel";
     private static final long REFRESH_LOC_TIME = 3000;
     private static final float MIN_LOC_DIST = 10F;
@@ -47,7 +49,6 @@ public class LocationService extends Service {
     public void onCreate() {
         super.onCreate();
         permissionUtil = new PermissionUtil(this);
-        initializeNotificationChannel();
     }
 
     @Override
@@ -80,19 +81,7 @@ public class LocationService extends Service {
     }
 
     @Override
-    public void onDestroy() {
-        stopSelf();
-        stopService(new Intent(this, LocationService.class));
-        super.onDestroy();
-    }
-
-    @Nullable
-    @Override
-    public IBinder onBind(Intent intent) {
-        return null;
-    }
-
-    private void initializeNotificationChannel() {
+    protected void initializeNotificationChannel() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID, "circles", NotificationManager.IMPORTANCE_DEFAULT
@@ -127,5 +116,16 @@ public class LocationService extends Service {
         }
 
         locationProvider.requestLocationUpdates(locationRequest, locationCallback, Looper.getMainLooper());
+    }
+
+    //https://stackoverflow.com/a/47692206
+    public static boolean isServiceRunning(Context context) {
+        ActivityManager manager = (ActivityManager) context.getSystemService(Context.ACTIVITY_SERVICE);
+        for (ActivityManager.RunningServiceInfo service : manager.getRunningServices(Integer.MAX_VALUE)) {
+            if (LocationService.class.getName().equals(service.service.getClassName())) {
+                return service.foreground;
+            }
+        }
+        return false;
     }
 }
