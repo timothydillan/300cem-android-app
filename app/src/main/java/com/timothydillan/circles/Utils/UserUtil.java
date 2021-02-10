@@ -1,20 +1,31 @@
 package com.timothydillan.circles.Utils;
 
+import android.location.Location;
+import android.net.Uri;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 
+import com.google.android.gms.tasks.OnFailureListener;
+import com.google.android.gms.tasks.OnSuccessListener;
+import com.google.firebase.auth.UserProfileChangeRequest;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.ValueEventListener;
+import com.google.firebase.storage.StorageReference;
+import com.google.firebase.storage.UploadTask;
 import com.timothydillan.circles.Models.User;
+
+import java.text.SimpleDateFormat;
+import java.util.Date;
 
 public class UserUtil {
     private UsersListener listener = null;
     private static final String TAG = "UserUtil";
     private static final String USER_UID = FirebaseUtil.getCurrentUser().getUid();
     private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
+    private static final StorageReference storageReference = FirebaseUtil.getStorageReference();
     public static User currentUser = null;
 
     public void addEventListener(UsersListener listener) {
@@ -95,7 +106,8 @@ public class UserUtil {
                 || !oldUser.getPhone().equals(newUser.getPhone())
                 || oldUser.getLatitude() != newUser.getLatitude()
                 || oldUser.getLongitude() != newUser.getLongitude()
-                || !oldUser.getProfilePicUrl().equals(newUser.getProfilePicUrl());
+                || !oldUser.getProfilePicUrl().equals(newUser.getProfilePicUrl())
+                || oldUser.getCurrentCircleSession() != newUser.getCurrentCircleSession();
     }
 
     private void addUsersChangeListener() {
@@ -115,6 +127,67 @@ public class UserUtil {
                 Log.w(TAG, "updateUsers:failure", error.toException());
             }
         });
+    }
+
+    public void updateDbUserFirstName(String firstName) {
+        databaseReference.child("Users").child(USER_UID).child("firstName").setValue(firstName);
+    }
+
+    public void updateDbUserLastName(String lastName) {
+        databaseReference.child("Users").child(USER_UID).child("lastName").setValue(lastName);
+    }
+
+    public void updateDbUserBirthDate(String birthDate) {
+        databaseReference.child("Users").child(USER_UID).child("birthDate").setValue(birthDate);
+    }
+
+    public void updateDbUserGender(String gender) {
+        databaseReference.child("Users").child(USER_UID).child("gender").setValue(gender);
+    }
+
+    public void updateDbUserLastSharingTime() {
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
+        String currentDateAndTime = dateFormat.format(new Date());
+        databaseReference.child("Users").child(USER_UID).child("lastSharingTime").setValue(currentDateAndTime);
+    }
+
+    public void updateDbUserLocation(Location location) {
+        databaseReference.child("Users").child(USER_UID).child("latitude").setValue(location.getLatitude());
+        databaseReference.child("Users").child(USER_UID).child("longitude").setValue(location.getLongitude());
+    }
+
+    public void updateDbUserProfilePic(String url) {
+        databaseReference.child("Users").child(USER_UID).child("profilePicUrl").setValue(url);
+    }
+
+    public void updateDbUser(User user) {
+        databaseReference.child("Users").child(USER_UID).setValue(user);
+    }
+
+    public void updateDbUserCurrentCircle(int circleCode) {
+        databaseReference.child("Users").child(USER_UID).child("currentCircleSession")
+                .setValue(circleCode);
+    }
+
+    public void setNewProfilePicture(Uri imageUri) {
+        StorageReference userStorageReference = storageReference.child("images/profileImages/" + USER_UID);
+        userStorageReference.putFile(imageUri)
+                .addOnSuccessListener(taskSnapshot ->
+                        userStorageReference.getDownloadUrl().addOnSuccessListener(uri -> {
+                            UserProfileChangeRequest request = new UserProfileChangeRequest.Builder()
+                                    .setPhotoUri(uri)
+                                    .build();
+                            FirebaseUtil.getCurrentUser().updateProfile(request).addOnSuccessListener(aVoid -> {
+                                Log.d(TAG, "Successfully updated profile image.");
+                                String profilePicUrl = String.valueOf(FirebaseUtil.getCurrentUser().getPhotoUrl());
+                                updateDbUserProfilePic(profilePicUrl);
+                    });
+                }))
+                .addOnFailureListener(e -> Log.d(TAG, "Failed to upload image."));
+    }
+
+    public static void resetUser() {
+        currentUser = null;
     }
 
     public interface UsersListener {
