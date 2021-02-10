@@ -18,13 +18,16 @@ import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
 import com.google.firebase.database.ValueEventListener;
 import com.timothydillan.circles.Models.Circle;
+import com.timothydillan.circles.Models.User;
+import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.UserUtil;
 
+import java.util.ArrayList;
+
 public class JoinCircleActivity extends ActivityInterface {
-    private static final String FIREBASE_TAG = "firebaseRelated";
-    private DatabaseReference databaseReference;
+    private static final String TAG = "JoinCircleActivity";
     private TextInputLayout circleInput;
-    private final String USER_UID = UserUtil.getCurrentUser().getUid();
+    private CircleUtil circleUtil = new CircleUtil();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -36,7 +39,6 @@ public class JoinCircleActivity extends ActivityInterface {
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
 
         circleInput = findViewById(R.id.circleCodeInputLayout);
-        databaseReference = FirebaseDatabase.getInstance().getReference();
     }
 
     @Override
@@ -59,42 +61,27 @@ public class JoinCircleActivity extends ActivityInterface {
             circleInput.setErrorEnabled(false);
         }
 
-        databaseReference.child("Circles").child(circleCode).addListenerForSingleValueEvent(new ValueEventListener() {
-            @Override
-            public void onDataChange(@NonNull DataSnapshot snapshot) {
-                if (!snapshot.exists()) {
-                    Log.d(FIREBASE_TAG, "Circle doesn't exist.");
-                    Snackbar.make(v, "Circle doesn't exist.", Snackbar.LENGTH_LONG).show();
-                    return;
-                }
-                Circle newCircle = new Circle("Member");
-                databaseReference.child("Circles")
-                        .child(circleCode)
-                        .child("Members")
-                        .child(USER_UID)
-                        .setValue(newCircle).addOnCompleteListener(new OnCompleteListener<Void>() {
-                    @Override
-                    public void onComplete(@NonNull Task<Void> task) {
-                        if (task.isSuccessful()) {
-                            Log.d(FIREBASE_TAG, "Successfully joined the circle.");
-                            Snackbar.make(v, "Successfully joined the circle.", Snackbar.LENGTH_LONG).show();
-                            databaseReference.child("Users")
-                                    .child(USER_UID)
-                                    .child("currentCircleSession")
-                                    .setValue(Double.parseDouble(circleCode));
-                            goToMainActivity();
-                        } else {
-                            Snackbar.make(v, "Failed to join the circle.", Snackbar.LENGTH_LONG).show();
-                        }
-                    }
-                });
-            }
+        circleUtil.joinCircle(circleCode);
 
+        circleUtil.addEventListener(new CircleUtil.CircleUtilListener() {
             @Override
-            public void onCancelled(@NonNull DatabaseError error) {
-                Log.w(FIREBASE_TAG, "Failed to get circle information.");
+            public void onCircleReady(ArrayList<User> members) { }
+            @Override
+            public void onCircleChange() { }
+            @Override
+            public void onJoinCircle(boolean success) {
+                if (success) {
+                    Log.d(TAG, "Successfully joined the circle.");
+                    showSnackbar("Successfully joined the circle.");
+                } else {
+                    Log.d(TAG, "Failed to join the circle.");
+                    showSnackbar("Failed to join the circle.");
+                }
             }
         });
+    }
 
+    private void showSnackbar(String message) {
+        Snackbar.make(findViewById(android.R.id.content), message, Snackbar.LENGTH_LONG).show();
     }
 }
