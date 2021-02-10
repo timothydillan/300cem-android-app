@@ -1,20 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.timothydillan.circles">
-    <!--
-         The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
-         Google Maps Android API v2, but you must specify either coarse or fine
-         location permissions for the "MyLocation" functionality.
-    -->
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
-    <!--
-         The ACCESS_COARSE/FINE_LOCATION permissions are not required to use
-         Google Maps Android API v2, but you must specify either coarse or fine
-         location permissions for the "MyLocation" functionality.
-    -->
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
+    <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.VIBRATE" />
+    <!-- Required for 29+. -->
+    <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
+    <!-- Required for 28 and below. -->
+    <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+
 
     <application
         android:allowBackup="true"
@@ -56,7 +53,12 @@
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+        <receiver
+            android:name=".Receivers.ActivityTransitionsReceiver"
+            android:exported="false"
+            android:permission="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
         <service android:name=".Services.LocationService"/>
+        <service android:name=".Services.CrashService"/>
     </application>
 
 </manifest>
