@@ -4,5 +4,7 @@
     <dimen name="margin_top">16dp</dimen>
     <dimen name="margin_right">20dp</dimen>
     <dimen name="text_margin">16dp</dimen>
+    <dimen name="custom_marker">50dp</dimen>
+    <dimen name="custom_marker_padding">2dp</dimen>
     <dimen name="design_bottom_navigation_height" tools:override="true">50dp</dimen>
 </resources>
