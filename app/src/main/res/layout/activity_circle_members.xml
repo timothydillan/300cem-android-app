@@ -46,6 +46,8 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="@dimen/margin_top"
+            android:textSize="36sp"
+            android:textColor="@color/teal_700"
             android:text="Loading..."
             android:textAppearance="@style/ChipStyle"
             android:textStyle="bold" />
