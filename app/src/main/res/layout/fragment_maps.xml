@@ -26,9 +26,11 @@
             android:fontFamily="@font/dmsans"
             android:text="SOS"
             android:textAllCaps="false"
-            app:backgroundTint="@color/primary_text"
+            android:textColor="@color/primary_text"
+            app:backgroundTint="@color/card_color"
             app:cornerRadius="20dp"
             app:icon="@drawable/ic_baseline_security_24"
+            app:iconTint="@color/primary_text"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
             app:layout_constraintHorizontal_bias="0.107"
@@ -45,7 +47,9 @@
             android:fontFamily="@font/dmsans"
             android:text="Check In"
             android:textAllCaps="false"
-            app:backgroundTint="@color/primary_text"
+            app:iconTint="@color/primary_text"
+            app:backgroundTint="@color/card_color"
+            android:textColor="@color/primary_text"
             app:cornerRadius="20dp"
             app:icon="@drawable/ic_baseline_person_pin_24"
             app:layout_constraintBottom_toBottomOf="parent"
@@ -55,8 +59,8 @@
 
         <com.google.android.material.card.MaterialCardView
             android:id="@+id/mapTypeButton"
-            android:layout_width="wrap_content"
-            android:layout_height="30dp"
+            android:layout_width="40dp"
+            android:layout_height="40dp"
             android:layout_marginStart="90dp"
             android:background="@color/chip_icon_color"
             app:cardCornerRadius="20dp"
@@ -70,8 +74,8 @@
 
             <ImageView
                 android:id="@+id/imageView3"
-                android:layout_width="30dp"
-                android:layout_height="wrap_content"
+                android:layout_width="20dp"
+                android:layout_height="20dp"
                 android:layout_gravity="center"
                 app:srcCompat="@drawable/ic_baseline_map_24" />
         </com.google.android.material.card.MaterialCardView>

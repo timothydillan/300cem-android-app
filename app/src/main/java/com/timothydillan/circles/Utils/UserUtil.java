@@ -18,7 +18,9 @@ import com.google.firebase.storage.UploadTask;
 import com.timothydillan.circles.Models.User;
 
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.List;
 
 public class UserUtil {
     private UsersListener listener = null;
@@ -26,11 +28,83 @@ public class UserUtil {
     private static final String USER_UID = FirebaseUtil.getCurrentUser().getUid();
     private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private static final StorageReference storageReference = FirebaseUtil.getStorageReference();
-    public static User currentUser = null;
+    private static final ArrayList<String> registeredCircleTokens = new ArrayList<>();
+    private static User currentUser = null;
 
     public void addEventListener(UsersListener listener) {
         this.listener = listener;
         addUsersChangeListener();
+    }
+
+    public void initializeRegisteredCircles() {
+        /*
+        for each circle:
+            for each circle id:
+                for each member in circle id:
+                    check if member is in the snapshot
+                    if (yes) {
+                        list.add(circleid);
+                    }
+         */
+        ArrayList<String> registeredCircles = new ArrayList<>();
+        databaseReference.child("Circles").addListenerForSingleValueEvent(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                for (DataSnapshot circle : snapshot.getChildren()) {
+                    for (DataSnapshot id : circle.getChildren()) {
+                        for (DataSnapshot member : id.getChildren()) {
+                            Log.d(TAG, member.getKey());
+                            if (member.getKey().equals(USER_UID)) {
+                                Log.d(TAG, "FOUND MATCH!");
+                                registeredCircles.add(circle.getKey());
+                            }
+                        }
+                    }
+                }
+                initializeTokens(registeredCircles);
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) { }
+        });
+    }
+
+    public void initializeTokens(ArrayList<String> circleCodes) {
+        for (String circleCode : circleCodes) {
+            // Get each member's UID in the circle that the user is currently in.
+            databaseReference.child("Circles")
+                .child(circleCode)
+                .child("Members")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        for (DataSnapshot ds : snapshot.getChildren()) {
+                            databaseReference.child("Users")
+                                .child(ds.getKey())
+                                .addListenerForSingleValueEvent(new ValueEventListener() {
+                                    @Override
+                                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                        String token = snapshot.child("token").getValue(String.class);
+                                        if (!token.isEmpty() && !registeredCircleTokens.contains(token)) {
+                                            registeredCircleTokens.add(token);
+                                        }
+                                    }
+                                    @Override
+                                    public void onCancelled(@NonNull DatabaseError error) { }
+                                });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.w(TAG, "getCircleMemberUid:failure", error.toException());
+                    }
+                });
+        }
+
+    }
+
+    public static ArrayList<String> getTokens() {
+        return registeredCircleTokens;
     }
 
     public void initializeCurrentUser() {
@@ -145,15 +219,8 @@ public class UserUtil {
         databaseReference.child("Users").child(USER_UID).child("gender").setValue(gender);
     }
 
-    public void updateDbUserLastSharingTime() {
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
-        String currentDateAndTime = dateFormat.format(new Date());
-        databaseReference.child("Users").child(USER_UID).child("lastSharingTime").setValue(currentDateAndTime);
-    }
-
-    public void updateDbUserLocation(Location location) {
-        databaseReference.child("Users").child(USER_UID).child("latitude").setValue(location.getLatitude());
-        databaseReference.child("Users").child(USER_UID).child("longitude").setValue(location.getLongitude());
+    public void updateDbUserToken(String token) {
+        databaseReference.child("Users").child(USER_UID).child("token").setValue(token);
     }
 
     public void updateDbUserProfilePic(String url) {
@@ -188,6 +255,7 @@ public class UserUtil {
 
     public static void resetUser() {
         currentUser = null;
+        registeredCircleTokens.clear();
     }
 
     public interface UsersListener {

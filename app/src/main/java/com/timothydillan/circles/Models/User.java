@@ -20,12 +20,13 @@ public class User {
     public String birthDate = "";
     public String uid;
     public String profilePicUrl = "";
+    public String token = "";
 
     public User() {
 
     }
 
-    public User(String uid, String firstName, String lastName, String email, String phone, int currentCircleSession) {
+    public User(String uid, String firstName, String lastName, String email, String phone, int currentCircleSession, String token) {
         this.uid = uid;
         this.firstName = firstName;
         this.lastName = lastName;
@@ -33,15 +34,17 @@ public class User {
         this.phone = phone;
         this.currentCircleSession = currentCircleSession;
         this.lastSharingTime = getCurrentDateAndTime();
+        this.token = token;
     }
 
-    public User(String uid, String firstName, String lastName, String email, int currentCircleSession) {
+    public User(String uid, String firstName, String lastName, String email, int currentCircleSession, String token) {
         this.uid = uid;
         this.firstName = firstName;
         this.lastName = lastName;
         this.email = email;
         this.currentCircleSession = currentCircleSession;
         this.lastSharingTime = getCurrentDateAndTime();
+        this.token = token;
     }
 
     public String getLastName() {

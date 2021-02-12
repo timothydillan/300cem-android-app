@@ -112,7 +112,7 @@ public class SignUpActivity extends ActivityInterface {
                         Circle newCircle = new Circle("Admin");
 
                         // Create a new user with the current session being on the current circle
-                        User newUser = new User(USER_UID, firstName, lastName, email, phone, circleCode);
+                        User newUser = new User(USER_UID, firstName, lastName, email, phone, circleCode, FirebaseUtil.getFirebaseMessagingToken());
 
                         FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
                                 .child("name").setValue(firstName + "'s Circle");
@@ -234,7 +234,7 @@ public class SignUpActivity extends ActivityInterface {
                             String[] fullName = user.getDisplayName().split(" ");
 
                             // Create a new user with the current session being on the current circle
-                            User newUser = new User(user.getUid(), fullName[0], fullName[1], user.getEmail(), circleCode);
+                            User newUser = new User(user.getUid(), fullName[0], fullName[1], user.getEmail(), circleCode, FirebaseUtil.getFirebaseMessagingToken());
 
                             FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
                                     .child("name").setValue(firstName + "'s Circle");

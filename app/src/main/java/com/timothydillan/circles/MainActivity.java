@@ -15,6 +15,8 @@ import android.view.View;
 
 import com.google.android.material.bottomnavigation.BottomNavigationView;
 import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.messaging.FirebaseMessaging;
+import com.google.firebase.messaging.FirebaseMessagingService;
 import com.timothydillan.circles.Services.CrashService;
 import com.timothydillan.circles.Services.LocationService;
 import com.timothydillan.circles.Utils.CircleUtil;
@@ -42,7 +44,8 @@ public class MainActivity extends AppCompatActivity {
 
         FirebaseUtil.initializeCurrentFirebaseUser();
         UserUtil userUtil = new UserUtil();
-        final BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
+        userUtil.initializeRegisteredCircles();
+        BottomNavigationView bottomNavigationView = findViewById(R.id.bottomNavigationView);
         userUtil.addEventListener(new UserUtil.UsersListener() {
             @Override
             public void onUserReady() {

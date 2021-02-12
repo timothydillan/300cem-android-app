@@ -8,14 +8,14 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:341514827824:android:637daf15c4171c2a0815f5",
+        "mobilesdk_app_id": "1:341514827824:android:7bf4d3bea22278eb0815f5",
         "android_client_info": {
           "package_name": "com.timothydillan.circles"
         }
       },
       "oauth_client": [
         {
-          "client_id": "341514827824-33ctkf1hm7uih7f2npbnvqqfpp1tjrut.apps.googleusercontent.com",
+          "client_id": "341514827824-h50bjkq35o8tc3su281i7htdmjhml982.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.timothydillan.circles",
@@ -29,7 +29,7 @@
       ],
       "api_key": [
         {
-          "current_key": "AIzaSyCYZcijTlVUVhB8FJEH8yvJQj2xmDHqCgE"
+          "current_key": "AIzaSyB7G4a8N39duQiSqgb9fLgOj1JTYtpnN_M"
         }
       ],
       "services": {

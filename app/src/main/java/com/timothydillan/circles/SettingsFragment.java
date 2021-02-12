@@ -88,7 +88,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void addPrivacyConfigurations() {
-        privacyConfigItemList.addItem("Password", JoinCircleActivity.class);
+        privacyConfigItemList.addItem("Password", CrashConfirmationActivity.class);
         privacyConfigItemList.addItem("Fingerprint", JoinCircleActivity.class);
         privacyConfigItemList.addItem("Face ID", JoinCircleActivity.class);
     }

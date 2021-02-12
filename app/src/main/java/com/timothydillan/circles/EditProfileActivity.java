@@ -18,14 +18,12 @@ import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
-import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
-import com.bumptech.glide.Glide;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.snackbar.Snackbar;
@@ -79,6 +77,7 @@ public class EditProfileActivity extends AppCompatActivity {
         userUtil.addEventListener(new UserUtil.UsersListener() {
             @Override
             public void onUserReady() { }
+
             @Override
             public void onUsersChange(@NonNull DataSnapshot snapshot) {
                 updateUserProfile(snapshot);

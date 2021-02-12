@@ -4,50 +4,65 @@ import android.content.Context;
 import android.content.Intent;
 import android.content.res.Configuration;
 import android.content.res.Resources;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
+import android.graphics.BitmapShader;
+import android.graphics.Canvas;
+import android.graphics.Color;
+import android.graphics.Matrix;
+import android.graphics.Paint;
+import android.graphics.RectF;
+import android.graphics.Shader;
+import android.graphics.drawable.Drawable;
 import android.location.Address;
 import android.location.Geocoder;
+import android.location.Location;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.core.content.ContextCompat;
+import androidx.core.content.res.ResourcesCompat;
 
+import com.android.volley.VolleyError;
+import com.android.volley.toolbox.ImageLoader;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
 import com.google.android.gms.maps.model.MapStyleOptions;
 import com.google.android.gms.maps.model.Marker;
+import com.google.android.gms.maps.model.MarkerOptions;
 import com.google.firebase.database.DataSnapshot;
-import com.google.maps.android.clustering.ClusterManager;
-import com.timothydillan.circles.Models.ClusterMarker;
+import com.google.firebase.database.DatabaseReference;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.R;
 import com.timothydillan.circles.Services.LocationService;
+import com.timothydillan.circles.UI.VolleyImageRequest;
 
-import java.io.ByteArrayInputStream;
-import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class LocationUtil {
+    private static ImageLoader imageLoader;
     private static final String TAG = "LocationUtil";
     private static final LatLng SINGAPORE_COORDINATES = new LatLng(1.290270, 103.851959);
+    private static final String USER_UID = FirebaseUtil.getCurrentUser().getUid();
     private Context ctx;
     private static GoogleMap map = null;
-    private static HashMap<User, ClusterMarker> membersLocation = new HashMap<>();
+    private static HashMap<User, Marker> membersLocation = new HashMap<>();
+    private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private static CameraPosition lastCameraPosition = null;
     private static Geocoder geocoder;
-    private ClusterManager<ClusterMarker> clusterManager;
-    private ClusterMarkerManager clusterRenderer;
 
     public LocationUtil(Context context) {
         ctx = context;
+        imageLoader = VolleyImageRequest.getInstance(ctx).getImageLoader();
         geocoder = new Geocoder(ctx);
     }
 
@@ -95,42 +110,61 @@ public class LocationUtil {
             ContextCompat.startForegroundService(ctx, locationForegroundService);
         }
 
-        initializeClusterManagers();
-
         // Then for each member from the retrieved arraylist,
         for (User circleMember : circleMembers) {
             // Get their location
             LatLng memberLocation = new LatLng(circleMember.getLatitude(), circleMember.getLongitude());
-            ClusterMarker clusterMarker = new ClusterMarker(circleMember);
-            clusterManager.addItem(clusterMarker);
-            // And create a marker with their location
-            // Marker memberMarker = map.addMarker(new MarkerOptions().position(memberLocation).title(circleMember.getFirstName() + "'s Location"));
+            Bitmap imageBitmap = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.logo);
+
+            Marker memberMarker = map.addMarker(new MarkerOptions()
+                    .position(memberLocation)
+                    .title(circleMember.getFirstName() + "'s Location")
+                    .snippet(circleMember.getLastSharingTime())
+                    .anchor(0.5f, 0.907f)
+                    .icon(BitmapDescriptorFactory.fromBitmap(createUserBitmap(imageBitmap))));
+
             // Animate/move the camera to the current user with a zoom of 15
             if (circleMember.getUid().equals(UserUtil.getCurrentUser().getUid()))
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(memberLocation, 15.0f));
             // and put it into the hashmap.
-            membersLocation.put(circleMember, clusterMarker);
+            membersLocation.put(circleMember, memberMarker);
         }
+        updateAvatars();
+    }
 
-        clusterManager.cluster();
+    public void updateAvatars() {
+        for (Map.Entry<User, Marker> marker : membersLocation.entrySet()) {
+            imageLoader.get(marker.getKey().getProfilePicUrl(), new ImageLoader.ImageListener() {
+                @Override
+                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                    Bitmap imageBitmap = response.getBitmap() != null ? response.getBitmap() : BitmapFactory.decodeResource(ctx.getResources(), R.drawable.logo);
+                    marker.getValue().setIcon(BitmapDescriptorFactory.fromBitmap(createUserBitmap(imageBitmap)));
+                }
+                @Override
+                public void onErrorResponse(VolleyError error) { }
+            });
+        }
     }
 
     public ArrayList<User> getUpdatedInformation(@NonNull DataSnapshot snapshot) {
+        if (membersLocation.isEmpty()) {
+            return null;
+        }
         // Create an array list to store newly updated information
         ArrayList<User> newMemberInformation = new ArrayList<>();
         // For each of the data received,
         for (DataSnapshot ds : snapshot.getChildren()) {
             // and for every member in the circle
-            for (Map.Entry<User, ClusterMarker> circleMembers : membersLocation.entrySet()) {
+            for (Map.Entry<User, Marker> circleMembers : membersLocation.entrySet()) {
                 // Get their current marker and user details
-                ClusterMarker currentMemberMarker = circleMembers.getValue();
+                Marker currentMemberMarker = circleMembers.getValue();
                 User currentCircleMember = circleMembers.getKey();
                 if (ds.getKey().equals(currentCircleMember.getUid())) {
                     User newMember = ds.getValue(User.class);
                     if (UserUtil.didUserChange(currentCircleMember, newMember)) {
                         UserUtil.updateCurrentUser(currentCircleMember, newMember);
                         LatLng newPosition = new LatLng(newMember.getLatitude(), newMember.getLongitude());
-                        clusterRenderer.getMarker(currentMemberMarker).setPosition(newPosition);
+                        currentMemberMarker.setSnippet(currentCircleMember.getLastSharingTime());
                         currentMemberMarker.setPosition(newPosition);
                     }
                     // add the new information to the list.
@@ -142,15 +176,57 @@ public class LocationUtil {
         return newMemberInformation;
     }
 
-    public void resetClusterManagers() {
-        clusterRenderer = null;
-        clusterManager = null;
+    private Bitmap createUserBitmap(Bitmap profilePic) {
+        Bitmap result = null;
+        try {
+            result = Bitmap.createBitmap(dp(62), dp(76), Bitmap.Config.ARGB_8888);
+            result.eraseColor(Color.TRANSPARENT);
+            Canvas canvas = new Canvas(result);
+            Drawable drawable = ResourcesCompat.getDrawable(ctx.getResources(), R.drawable.pin, null);
+            drawable.setBounds(0, 0, dp(62), dp(76));
+            drawable.draw(canvas);
+
+            Paint roundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
+            RectF bitmapRect = new RectF();
+            canvas.save();
+
+            if (profilePic != null) {
+                BitmapShader shader = new BitmapShader(profilePic, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
+                Matrix matrix = new Matrix();
+                float scale = dp(52) / (float) profilePic.getWidth();
+                matrix.postTranslate(dp(6), dp(6));
+                matrix.postScale(scale, scale);
+                roundPaint.setShader(shader);
+                shader.setLocalMatrix(matrix);
+                bitmapRect.set(dp(6), dp(6), dp(50 + 6), dp(50 + 6));
+                canvas.drawRoundRect(bitmapRect, dp(25), dp(25), roundPaint);
+            }
+            canvas.restore();
+            try {
+                canvas.setBitmap(null);
+            } catch (Exception e) {}
+
+        } catch (Throwable t) {
+            t.printStackTrace();
+        }
+        return result;
     }
 
-    public void initializeClusterManagers() {
-        clusterManager = new ClusterManager<>(ctx, map);
-        clusterRenderer = new ClusterMarkerManager(ctx, map, clusterManager);
-        clusterManager.setRenderer(clusterRenderer);
+    private int dp(float value) {
+        if (value == 0) {
+            return 0;
+        }
+        return (int) Math.ceil(ctx.getResources().getDisplayMetrics().density * value);
+    }
+
+    public static void updateUserLocation(Location location) {
+        // Get current date
+        SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
+        String currentDateAndTime = dateFormat.format(new Date());
+        // Update latitude, longitude, and the last sharing time of the users.
+        databaseReference.child("Users").child(USER_UID).child("latitude").setValue(location.getLatitude());
+        databaseReference.child("Users").child(USER_UID).child("longitude").setValue(location.getLongitude());
+        databaseReference.child("Users").child(USER_UID).child("lastSharingTime").setValue(currentDateAndTime);
     }
 
     public static void resetMap() {
@@ -174,7 +250,7 @@ public class LocationUtil {
         }
     }
 
-    public HashMap<User, ClusterMarker> getMembers() {
+    public HashMap<User, Marker> getMembers() {
         return membersLocation;
     }
 

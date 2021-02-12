@@ -172,7 +172,6 @@ public class MapsFragment extends Fragment {
     @Override
     public void onPause() {
         super.onPause();
-        locationUtil.resetClusterManagers();
         locationUtil.storeLastCameraPosition(mMap.getCameraPosition());
     }
 
@@ -203,6 +202,7 @@ public class MapsFragment extends Fragment {
                 userUtil.addEventListener(new UserUtil.UsersListener() {
                     @Override
                     public void onUserReady() { }
+
                     @Override
                     public void onUsersChange(@NonNull DataSnapshot snapshot) {
                         ArrayList<User> newMemberInformation = locationUtil.getUpdatedInformation(snapshot);

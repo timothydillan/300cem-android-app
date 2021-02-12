@@ -17,6 +17,7 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.FusedLocationProviderClient;
 import com.google.android.gms.location.LocationCallback;
@@ -28,6 +29,7 @@ import com.timothydillan.circles.MainActivity;
 import com.timothydillan.circles.R;
 import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.FirebaseUtil;
+import com.timothydillan.circles.Utils.LocationUtil;
 import com.timothydillan.circles.Utils.PermissionUtil;
 import com.timothydillan.circles.Utils.UserUtil;
 
@@ -38,10 +40,8 @@ public class LocationService extends Services {
     private static final String CHANNEL_ID = "circlesLocationChannel";
     private static final long REFRESH_LOC_TIME = 3000;
     private static final float MIN_LOC_DIST = 10F;
-    private static final String USER_UID = UserUtil.getCurrentUser().getUid();
-    private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
-    private PermissionUtil permissionUtil;
 
+    private PermissionUtil permissionUtil;
     private FusedLocationProviderClient locationProvider;
     private LocationCallback locationCallback;
 
@@ -63,7 +63,7 @@ public class LocationService extends Services {
                 }
                 for (Location location : locationResult.getLocations()) {
                     Log.d("LOCATION SERVICE", "Location updated.");
-                    updateUserLocation(location);
+                    LocationUtil.updateUserLocation(location);
                 }
             }
         };
@@ -86,19 +86,9 @@ public class LocationService extends Services {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID, "circles", NotificationManager.IMPORTANCE_DEFAULT
             );
-            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            NotificationManager notificationManager = ContextCompat.getSystemService(this, NotificationManager.class);
             notificationManager.createNotificationChannel(serviceChannel);
         }
-    }
-
-    private void updateUserLocation(Location location) {
-        // Get current date
-        SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
-        String currentDateAndTime = dateFormat.format(new Date());
-        // Update latitude, longitude, and the last sharing time of the users.
-        databaseReference.child("Users").child(USER_UID).child("latitude").setValue(location.getLatitude());
-        databaseReference.child("Users").child(USER_UID).child("longitude").setValue(location.getLongitude());
-        databaseReference.child("Users").child(USER_UID).child("lastSharingTime").setValue(currentDateAndTime);
     }
 
     @SuppressLint("MissingPermission")

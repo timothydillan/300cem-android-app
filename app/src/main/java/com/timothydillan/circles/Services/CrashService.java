@@ -16,6 +16,7 @@ import android.os.Vibrator;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import com.google.android.gms.location.ActivityRecognition;
 import com.google.android.gms.location.ActivityTransition;
@@ -96,11 +97,11 @@ public class CrashService extends Services implements CrashListener.OnCrashListe
 
     @Override
     protected void initializeNotificationChannel() {
+        notificationManager = ContextCompat.getSystemService(this, NotificationManager.class);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             NotificationChannel serviceChannel = new NotificationChannel(
                     CHANNEL_ID, "circles", NotificationManager.IMPORTANCE_DEFAULT
             );
-            notificationManager = getSystemService(NotificationManager.class);
             notificationManager.createNotificationChannel(serviceChannel);
         }
     }

@@ -1,17 +1,18 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.timothydillan.circles">
+
     <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION" />
     <uses-permission android:name="android.permission.ACCESS_BACKGROUND_LOCATION" />
     <uses-permission android:name="android.permission.BODY_SENSORS" />
     <uses-permission android:name="android.permission.INTERNET" />
-    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE" />
     <uses-permission android:name="android.permission.VIBRATE" />
     <!-- Required for 29+. -->
     <uses-permission android:name="android.permission.ACTIVITY_RECOGNITION" />
     <!-- Required for 28 and below. -->
     <uses-permission android:name="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
-
+    <uses-permission android:name="com.google.android.c2dm.permission.RECEIVE" />
 
     <application
         android:allowBackup="true"
@@ -20,7 +21,8 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Circles">
-        <activity android:name=".EditProfileActivity"/>
+        <activity android:name=".CrashConfirmationActivity" />
+        <activity android:name=".EditProfileActivity" />
         <activity android:name=".CircleMembersActivity" />
         <activity android:name=".JoinCircleActivity" />
         <!--
@@ -40,7 +42,6 @@
         <activity android:name=".SplashActivity">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
@@ -49,16 +50,26 @@
             android:screenOrientation="portrait">
             <intent-filter>
                 <action android:name="com.timothydillan.circles.MainActivity" />
-
                 <category android:name="android.intent.category.DEFAULT" />
             </intent-filter>
         </activity>
+
         <receiver
             android:name=".Receivers.ActivityTransitionsReceiver"
             android:exported="false"
-            android:permission="com.google.android.gms.permission.ACTIVITY_RECOGNITION"/>
-        <service android:name=".Services.LocationService"/>
-        <service android:name=".Services.CrashService"/>
+            android:permission="com.google.android.gms.permission.ACTIVITY_RECOGNITION" />
+
+        <service android:name=".Services.LocationService" />
+        <service android:name=".Services.CrashService" />
+        <service android:name=".Services.NotificationService"
+            android:enabled="true"
+            android:exported="true"
+            android:permission="com.google.android.c2dm.permission.SEND">
+            <intent-filter>
+                <action android:name="com.google.firebase.MESSAGING_EVENT" />
+                <category android:name="com.google.android.c2dm.intent.RECEIVE" />
+            </intent-filter>
+        </service>
     </application>
 
 </manifest>
