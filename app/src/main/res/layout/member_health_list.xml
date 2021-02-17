@@ -1,0 +1,130 @@
+<?xml version="1.0" encoding="utf-8"?>
+<com.google.android.material.card.MaterialCardView
+    xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:layout_marginBottom="16dp"
+    app:layout_constraintBottom_toBottomOf="parent"
+    app:layout_constraintStart_toStartOf="parent"
+    app:layout_constraintTop_toTopOf="parent"
+    app:cardElevation="8dp"
+    app:strokeWidth="2dp"
+    android:clickable="true"
+    android:focusable="true"
+    app:strokeColor="@color/logo_color_green"
+    app:cardBackgroundColor="@color/card_color"
+    app:cardCornerRadius="8dp">
+
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <TextView
+            android:id="@+id/memberName"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:layout_marginTop="4dp"
+            android:layout_marginBottom="16dp"
+            android:fontFamily="@font/dmsans_medium"
+            android:text="TextView"
+            android:textColor="@color/primary_text"
+            android:textSize="20sp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toEndOf="@+id/memberImage"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.218"
+            tools:text=" Alice Doe" />
+
+        <com.google.android.material.card.MaterialCardView
+            android:id="@+id/memberImage"
+            android:layout_width="80dp"
+            android:layout_height="80dp"
+            app:cardElevation="0dp"
+            android:layout_marginStart="26dp"
+            android:layout_marginTop="17dp"
+            android:layout_marginBottom="16dp"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:cardCornerRadius="50dp"
+            app:cardPreventCornerOverlap="false">
+            <com.android.volley.toolbox.NetworkImageView
+                android:id="@+id/memberImageView"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:adjustViewBounds="true"
+                android:scaleType="centerCrop"
+                app:layout_constraintBottom_toBottomOf="parent"
+                app:layout_constraintStart_toStartOf="parent"
+                app:layout_constraintTop_toTopOf="parent" />
+        </com.google.android.material.card.MaterialCardView>
+
+        <LinearLayout
+            android:id="@+id/heartRateLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:paddingRight="16dp"
+            android:layout_marginTop="6dp"
+            app:layout_constraintStart_toEndOf="@+id/memberImage"
+            app:layout_constraintTop_toBottomOf="@+id/memberName"
+            android:orientation="horizontal">
+            <TextView
+                android:id="@+id/heartEmoji"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dmsans"
+                android:textSize="13sp"
+                android:ellipsize="end"
+                android:text=" ❤️"
+                android:maxLines="1"
+                android:textColor="@color/primary_text" />
+            <TextView
+                android:id="@+id/heartRateTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dmsans"
+                android:textSize="13sp"
+                android:ellipsize="end"
+                android:layout_marginStart="3dp"
+                android:text="Loading heart rate..."
+                android:maxLines="1"
+                android:textColor="@color/primary_text" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/stepCountLayout"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginStart="16dp"
+            android:paddingRight="16dp"
+            android:layout_marginTop="6dp"
+            app:layout_constraintStart_toEndOf="@+id/memberImage"
+            app:layout_constraintTop_toBottomOf="@+id/heartRateLayout"
+            android:orientation="horizontal">
+            <TextView
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dmsans"
+                android:textSize="13sp"
+                android:ellipsize="end"
+                android:text=" 🏃‍"
+                android:maxLines="1"
+                android:textColor="@color/primary_text" />
+            <TextView
+                android:id="@+id/stepCountTextView"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/dmsans"
+                android:textSize="13sp"
+                android:ellipsize="end"
+                android:layout_marginStart="3dp"
+                android:text="Loading step count..."
+                android:maxLines="1"
+                android:textColor="@color/primary_text" />
+        </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
+
+</com.google.android.material.card.MaterialCardView>

@@ -2,23 +2,29 @@ package com.timothydillan.circles.Utils;
 
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+
 import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
+import com.google.firebase.database.DataSnapshot;
+import com.google.firebase.database.DatabaseError;
 import com.google.firebase.database.DatabaseReference;
 import com.google.firebase.database.FirebaseDatabase;
+import com.google.firebase.database.ValueEventListener;
 import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
 public class FirebaseUtil {
 
-    public static final String FCM_KEY = "AAAAT4PeuDA:APA91bFTJa2tgHxH0-1vreezBGKnmne8SNZpkrsymZtMgNJnveu3OmzvA1n7Y8QDh_v2nF_eF5F_QaJOIJ9SP04FN0ejK-K0yEAi1PWow-oV7C2C550Xeq_HEUMsP3-7MpldgYbEpalj";
+    public static final String FCM_KEY = "AAAAT4PeuDA:APA91bEB-PPv1_vQefd-KOFun5df3HZvzjhSv-cok8NrTLhY--OJW5xS1aFgu0t19Z9m8c-0k1qz2uslz9DylyyuAP4Dp9u32p0agsBuzX37r7Q_tBjMQjkZLywZUYdbPlWUfEtAq3Wm";
     private static StorageReference firebaseStorageReference = null;
     private static DatabaseReference firebaseDatabaseReference = null;
     private static FirebaseAuth firebaseAuth = null;
     private static FirebaseUser firebaseCurrentUser = null;
     private static String firebaseMessagingToken = null;
+    private static String currentCircleName = null;
 
     public static void initializeFirebaseDbAuthStorage() {
         if (firebaseDatabaseReference != null && firebaseAuth != null && firebaseStorageReference != null) {
@@ -36,9 +42,27 @@ public class FirebaseUtil {
         firebaseCurrentUser = firebaseAuth.getCurrentUser();
         FirebaseMessaging.getInstance().getToken().addOnSuccessListener(s -> {
             Log.d("TOKEN:",  s);
-            firebaseMessagingToken = s;
+            if (firebaseCurrentUser != null) {
+                firebaseDatabaseReference.child("Users").child(firebaseCurrentUser.getUid()).child("token").setValue(s);
+                firebaseMessagingToken = s;
+            }
         });
     }
+
+    public static void initializeCircleName() {
+        firebaseDatabaseReference.child("Circles")
+            .child(String.valueOf(UserUtil.getCurrentUser().getCurrentCircleSession()))
+            .addListenerForSingleValueEvent(new ValueEventListener() {
+                @Override
+                public void onDataChange(@NonNull DataSnapshot snapshot) {
+                    currentCircleName = snapshot.child("name").getValue(String.class);
+                }
+                @Override
+                public void onCancelled(@NonNull DatabaseError error) { }
+            });
+    }
+
+    public static String getCurrentCircleName() { return currentCircleName; }
 
     public static String getFirebaseMessagingToken() { return firebaseMessagingToken; }
 
