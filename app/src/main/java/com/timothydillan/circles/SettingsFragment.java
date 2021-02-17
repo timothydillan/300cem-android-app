@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.Switch;
 import android.widget.Toast;
 
 import com.google.android.material.switchmaterial.SwitchMaterial;
@@ -130,7 +129,7 @@ public class SettingsFragment extends Fragment {
         biometricsSwitch = view.findViewById(R.id.fingeprintSwitch);
 
         passwordButton.setOnClickListener(view1 -> {
-            Intent intent = new Intent(requireContext(), FingerprintActivity.class);
+            Intent intent = new Intent(requireContext(), PasswordActivity.class);
             startActivity(intent);
             requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         });

@@ -22,7 +22,7 @@
         android:theme="@style/Theme.Circles">
         <activity android:name=".AddPostActivity"></activity>
         <activity android:name=".SOSConfirmationActivity" />
-        <activity android:name=".FingerprintActivity" />
+        <activity android:name=".PasswordActivity" />
         <activity android:name=".EditCircleNameActivity" />
         <activity android:name=".CrashConfirmationActivity" />
         <activity android:name=".EditProfileActivity" />
