@@ -36,6 +36,8 @@ import com.timothydillan.circles.Utils.UserUtil;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 
+import static android.app.PendingIntent.FLAG_ONE_SHOT;
+
 public class LocationService extends Services {
     private static final String CHANNEL_ID = "circlesLocationChannel";
     private static final long REFRESH_LOC_TIME = 3000;
@@ -69,7 +71,7 @@ public class LocationService extends Services {
         };
         getUserLocation();
         Intent mapActivityIntent = new Intent(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mapActivityIntent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, mapActivityIntent, FLAG_ONE_SHOT);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("location notif")
                 .setContentText("hey there. we're tracking your location 🌝📍.")
