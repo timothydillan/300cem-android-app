@@ -1,5 +1,6 @@
 package com.timothydillan.circles;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.ObjectAnimator;
@@ -14,11 +15,13 @@ import android.widget.Toast;
 
 import com.timothydillan.circles.UI.ProgressButton;
 import com.timothydillan.circles.Utils.NotificationUtil;
+import com.timothydillan.circles.Utils.SharedPreferencesUtil;
 import com.timothydillan.circles.Utils.UserUtil;
 import java.util.concurrent.TimeUnit;
 
 public class CrashConfirmationActivity extends AppCompatActivity {
 
+    private SharedPreferencesUtil sharedPreferences;
     private View userOkView;
     private View userHelpView;
     private ProgressButton userOkButton;
@@ -26,16 +29,22 @@ public class CrashConfirmationActivity extends AppCompatActivity {
     private ProgressBar timerBar;
     private TextView timeTextView;
     private CountDownTimer countDownTimer;
+    private ObjectAnimator timerBarAnimator;
     private static final String notificationTitle = "SOS";
-    private static final String notificationMessage = UserUtil.getCurrentUser().getFirstName() + " is in danger! Check them out right now!";
-    private static final long TIMER_DURATION = 30000;
-    private static final long ONE_SECOND = 1000;
+    private static final String notificationMessage = UserUtil.getCurrentUser().getFirstName() + " has encountered a crash! Check them out right now!";
+    private static final int MAX_PROGRESS_VALUE = 2000;
+    private static final long TIMER_DURATION = TimeUnit.SECONDS.toMillis(30);
+    private static final long ONE_SECOND = TimeUnit.SECONDS.toMillis(1);
     private static final String TAG = "CrashConfirmation";
+    private static final String STORED_PROGRESS_VALUE = "STORED_PROGRESS_VALUE_KEY";
+    private static final String STORED_TIMER_DURATION = "STORED_TIMER_DURATION_KEY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_crash_confirmation);
+
+        sharedPreferences = new SharedPreferencesUtil(this);
 
         userOkView = findViewById(R.id.userOkButton);
         userHelpView = findViewById(R.id.userHelpButton);
@@ -43,7 +52,83 @@ public class CrashConfirmationActivity extends AppCompatActivity {
         userHelpButton = new ProgressButton("I need help 🆘", getResources(), userHelpView, R.color.red);
         timerBar = findViewById(R.id.timerBar);
         timeTextView = findViewById(R.id.timeTextView);
-        countDownTimer = new CountDownTimer(TIMER_DURATION, ONE_SECOND) {
+
+        if (savedInstanceState != null) {
+            startCountdownTimer(savedInstanceState.getLong(STORED_TIMER_DURATION));
+            startTimerBarAnimation(savedInstanceState.getLong(STORED_TIMER_DURATION),
+                    savedInstanceState.getInt(STORED_PROGRESS_VALUE));
+        } else {
+            startCountdownTimer(TIMER_DURATION);
+            startTimerBarAnimation(TIMER_DURATION, 0);
+        }
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sharedPreferences.writeBoolean(SharedPreferencesUtil.ACTIVITY_APP_KEY, true);
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        stopCountdownTimer();
+    }
+
+    @Override
+    protected void onStart() {
+        super.onStart();
+        userOkView.setOnClickListener(v -> {
+            Toast.makeText(this, "Good to know.", Toast.LENGTH_SHORT).show();
+            stopCountdownTimer();
+            super.onBackPressed();
+        });
+        userHelpView.setOnClickListener(v -> {
+            sendHelpNotification();
+            stopTimerBarAnimation();
+            stopCountdownTimer();
+            Toast.makeText(this, "Alerting other members.", Toast.LENGTH_SHORT).show();
+            userHelpButton.onFinished(R.color.red);
+            new Handler().postDelayed(this::finish, TimeUnit.SECONDS.toMillis(5));
+        });
+    }
+
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
+    @Override
+    protected void onSaveInstanceState(@NonNull Bundle outState) {
+        super.onSaveInstanceState(outState);
+        long currentTime = Long.parseLong(timeTextView.getText().toString());
+        outState.putInt(STORED_PROGRESS_VALUE, timerBar.getProgress());
+        outState.putLong(STORED_TIMER_DURATION, TimeUnit.SECONDS.toMillis(currentTime));
+    }
+
+    private void startTimerBarAnimation(long duration, int start) {
+        if (duration == 0) {
+            timerBar.setProgress(MAX_PROGRESS_VALUE);
+            return;
+        }
+        timerBarAnimator = ObjectAnimator.ofInt(timerBar, "progress", start, MAX_PROGRESS_VALUE); // see this max value coming back here, we animate towards that value
+        timerBarAnimator.setDuration(duration); // in milliseconds
+        timerBarAnimator.setInterpolator(new DecelerateInterpolator());
+        timerBarAnimator.start();
+    }
+
+    private void stopTimerBarAnimation() {
+        timerBarAnimator.cancel();
+    }
+
+    private void startCountdownTimer(long duration) {
+        if (duration == 0) {
+            timeTextView.setText("0");
+            return;
+        }
+        countDownTimer = new CountDownTimer(duration, ONE_SECOND) {
             @Override
             public void onTick(long millisUntilFinished) {
                 timeTextView.setText(String.valueOf((int) TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished)));
@@ -52,41 +137,21 @@ public class CrashConfirmationActivity extends AppCompatActivity {
             public void onFinish() {
                 sendHelpNotification();
                 Toast.makeText(CrashConfirmationActivity.this, "Alerting other members.", Toast.LENGTH_SHORT).show();
+                new Handler().postDelayed(CrashConfirmationActivity.this::finish, TimeUnit.SECONDS.toMillis(5));
             }
         };
-    }
-
-    @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        countDownTimer.cancel();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        ObjectAnimator animation = ObjectAnimator.ofInt(timerBar, "progress", 0, 2000); // see this max value coming back here, we animate towards that value
-        animation.setDuration(TIMER_DURATION); // in milliseconds
-        animation.setInterpolator(new DecelerateInterpolator());
-        animation.start();
         countDownTimer.start();
-        userOkView.setOnClickListener(v -> {
-            Toast.makeText(this, "Good to know.", Toast.LENGTH_SHORT).show();
-            countDownTimer.cancel();
-            finish();
-        });
-        userHelpView.setOnClickListener(v -> {
-            sendHelpNotification();
-            animation.pause();
-            countDownTimer.cancel();
-            Toast.makeText(this, "Alerting other members.", Toast.LENGTH_SHORT).show();
-            userHelpButton.onFinished(R.color.red);
-            new Handler().postDelayed(this::finish, 5000);
-        });
     }
 
-    public void sendHelpNotification() {
-        for (String token : UserUtil.getTokens()) {
+    private void stopCountdownTimer() {
+        if (countDownTimer != null) {
+            countDownTimer.cancel();
+            countDownTimer = null;
+        }
+    }
+
+    private void sendHelpNotification() {
+        for (String token : UserUtil.getAllTokens()) {
             /*if (token.equals(TOKEN))
                 continue;*/
             NotificationUtil.sendNotification(notificationTitle, notificationMessage, token);
