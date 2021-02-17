@@ -2,12 +2,8 @@ package com.timothydillan.circles.Models;
 import java.util.HashMap;
 
 public class ItemModel {
-    private final HashMap<Integer, HashMap<String, Class<?>>> settingsList;
+    private final HashMap<Integer, HashMap<String, Class<?>>> settingsList = new HashMap<>();
     private int index = 0;
-
-    public ItemModel() {
-        settingsList = new HashMap<>();
-    }
 
     public void addItem(String itemTitle, Class<?> activity) {
         HashMap<String, Class<?>> item = new HashMap<>();
