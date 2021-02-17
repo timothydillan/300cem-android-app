@@ -182,10 +182,19 @@ public class SignUpActivity extends ActivityInterface {
     }
 
     public void onSignInClick(View v) {
-        // TODO: Can implement an extra feature here to send Email and Password data if filled already to the sign in activity class
-        // making it easier for users
         Intent signInActivity = new Intent(SignUpActivity.this, SignInActivity.class);
+        String email = emailInput.getEditText().getText().toString();
+        String password = passwordInput.getEditText().getText().toString();
+        if (!email.isEmpty() && !password.isEmpty()) {
+            signInActivity.putExtra("EMAIL_KEY", email);
+            signInActivity.putExtra("PASSWORD_KEY", password);
+        } else if (!email.isEmpty()) {
+            signInActivity.putExtra("EMAIL_KEY", email);
+        } else if (!password.isEmpty()) {
+            signInActivity.putExtra("PASSWORD_KEY", password);
+        }
         startActivity(signInActivity);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
     }
 

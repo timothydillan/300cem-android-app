@@ -7,6 +7,7 @@ import android.util.Log;
 import android.view.View;
 
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.timothydillan.circles.UI.ProgressButton;
@@ -15,8 +16,10 @@ import com.timothydillan.circles.Utils.FirebaseUtil;
 public class SignInActivity extends ActivityInterface {
 
     private final String TAG = "FIREBASE_AUTH";
-    private TextInputLayout emailInput;
-    private TextInputLayout passwordInput;
+    private TextInputLayout emailLayout;
+    private TextInputLayout passwordLayout;
+    private TextInputEditText emailInput;
+    private TextInputEditText passwordInput;
     private String email;
     private String password;
     private FirebaseAuth firebaseAuth = FirebaseUtil.getFirebaseAuth();
@@ -29,8 +32,27 @@ public class SignInActivity extends ActivityInterface {
         setContentView(R.layout.activity_sign_in);
 
         // Assign inputs to corresponding XML ids
-        emailInput = findViewById(R.id.emailInputLayout);
-        passwordInput = findViewById(R.id.passwordInputLayout);
+        emailLayout = findViewById(R.id.emailInputLayout);
+        passwordLayout = findViewById(R.id.passwordInputLayout);
+
+        emailInput = findViewById(R.id.emailInput);
+        passwordInput = findViewById(R.id.passwordInput);
+
+        if (savedInstanceState == null) {
+            String savedEmail;
+            String savedPassword;
+            Bundle extras = getIntent().getExtras();
+            savedEmail = extras.getString("EMAIL_KEY");
+            savedPassword = extras.getString("PASSWORD_KEY");
+            if (!savedEmail.isEmpty() && !savedPassword.isEmpty()) {
+                emailInput.setText(savedEmail);
+                passwordInput.setText(savedPassword);
+            } else if (!savedEmail.isEmpty()) {
+                emailInput.setText(savedEmail);
+            } else if (!savedPassword.isEmpty()) {
+                passwordInput.setText(savedPassword);
+            }
+        }
 
         signInButton = findViewById(R.id.signInButton);
         progressButton = new ProgressButton("Sign In", getResources(), signInButton, R.color.dark_blue);
@@ -63,26 +85,26 @@ public class SignInActivity extends ActivityInterface {
     }
 
     public boolean formValidation() {
-        email = emailInput.getEditText().getText().toString();
-        password = passwordInput.getEditText().getText().toString();
+        email = emailLayout.getEditText().getText().toString();
+        password = passwordLayout.getEditText().getText().toString();
 
         if (email.isEmpty()) {
-            emailInput.setErrorEnabled(true);
+            emailLayout.setErrorEnabled(true);
             emailInput.setError("Your email address shouldn't be empty.");
             emailInput.requestFocus();
             return false;
         } else {
-            emailInput.setErrorEnabled(false);
+            emailLayout.setErrorEnabled(false);
         }
 
         if (password.length() < 8) {
-            passwordInput.setErrorEnabled(true);
-            passwordInput.setError("Your password needs to have at least 8 symbols.");
-            passwordInput.requestFocus();
+            passwordLayout.setErrorEnabled(true);
+            passwordLayout.setError("Your password needs to have at least 8 symbols.");
+            passwordLayout.requestFocus();
             return false;
         } else {
-            passwordInput.setErrorEnabled(false);
-            passwordInput.setError(null);
+            passwordLayout.setErrorEnabled(false);
+            passwordLayout.setError(null);
         }
 
         return true;
@@ -91,6 +113,7 @@ public class SignInActivity extends ActivityInterface {
     public void onSignUpClick(View v) {
         Intent signUpActivity = new Intent(SignInActivity.this, SignUpActivity.class);
         startActivity(signUpActivity);
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
     }
 
