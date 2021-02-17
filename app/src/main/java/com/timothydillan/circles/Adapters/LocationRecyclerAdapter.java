@@ -46,7 +46,7 @@ public class LocationRecyclerAdapter extends RecyclerView.Adapter<LocationRecycl
         private final NetworkImageView memberImage;
         public MyViewHolder(final View v) {
             super(v);
-            memberName = v.findViewById(R.id.healthTitle);
+            memberName = v.findViewById(R.id.memberName);
             lastSeen = v.findViewById(R.id.lastSeenMember);
             memberImage = v.findViewById(R.id.memberImageView);
             memberImage.setDefaultImageResId(R.drawable.logo);
