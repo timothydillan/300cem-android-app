@@ -29,11 +29,16 @@ public class UserUtil {
     private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private static final StorageReference storageReference = FirebaseUtil.getStorageReference();
     private static final ArrayList<String> registeredCircleTokens = new ArrayList<>();
+    private static final ArrayList<String> currentCircleTokens = new ArrayList<>();
     private static User currentUser = null;
 
     public void addEventListener(UsersListener listener) {
         this.listener = listener;
         addUsersChangeListener();
+    }
+
+    public void removeEventListener() {
+        this.listener = null;
     }
 
     public void initializeRegisteredCircles() {
@@ -61,16 +66,16 @@ public class UserUtil {
                         }
                     }
                 }
-                initializeTokens(registeredCircles);
+                initializeAllTokens(registeredCircles);
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) { }
         });
     }
 
-    public void initializeTokens(ArrayList<String> circleCodes) {
+    public void initializeAllTokens(ArrayList<String> circleCodes) {
         for (String circleCode : circleCodes) {
-            // Get each member's UID in the circle that the user is currently in.
+            // Get each member's token for every circle that the user is currently in.
             databaseReference.child("Circles")
                 .child(circleCode)
                 .child("Members")
@@ -100,11 +105,46 @@ public class UserUtil {
                     }
                 });
         }
-
     }
 
-    public static ArrayList<String> getTokens() {
+    public synchronized void initializeCurrentCircleTokens() {
+        // Get each member's UID in the circle that the user is currently in.
+        databaseReference.child("Circles")
+                .child(String.valueOf(UserUtil.getCurrentUser().getCurrentCircleSession()))
+                .child("Members")
+                .addListenerForSingleValueEvent(new ValueEventListener() {
+                    @Override
+                    public void onDataChange(@NonNull DataSnapshot snapshot) {
+                        for (DataSnapshot ds : snapshot.getChildren()) {
+                            databaseReference.child("Users")
+                                    .child(ds.getKey())
+                                    .addListenerForSingleValueEvent(new ValueEventListener() {
+                                        @Override
+                                        public void onDataChange(@NonNull DataSnapshot snapshot) {
+                                            String token = snapshot.child("token").getValue(String.class);
+                                            if (!token.isEmpty() && !currentCircleTokens.contains(token)) {
+                                                currentCircleTokens.add(token);
+                                            }
+                                        }
+                                        @Override
+                                        public void onCancelled(@NonNull DatabaseError error) { }
+                                    });
+                        }
+                    }
+
+                    @Override
+                    public void onCancelled(@NonNull DatabaseError error) {
+                        Log.w(TAG, "getCircleMemberUid:failure", error.toException());
+                    }
+                });
+    }
+
+    public static ArrayList<String> getAllTokens() {
         return registeredCircleTokens;
+    }
+
+    public static ArrayList<String> getCurrentCircleTokens() {
+        return currentCircleTokens;
     }
 
     public void initializeCurrentUser() {
@@ -146,6 +186,7 @@ public class UserUtil {
         currentUser.setGender(user.getGender());
         currentUser.setPhone(user.getPhone());
         currentUser.setProfilePicUrl(user.getProfilePicUrl());
+        currentUser.setBirthDate(user.getBirthDate());
     }
 
     public static void updateCurrentUser(User oldUser, User newUser) {
@@ -159,6 +200,8 @@ public class UserUtil {
         oldUser.setLongitude(newUser.getLongitude());
         oldUser.updateLastSharingTime();
         oldUser.setProfilePicUrl(newUser.getProfilePicUrl());
+        oldUser.setHeartRate(newUser.getHeartRate());
+        oldUser.setStepCount(newUser.getStepCount());
     }
 
     public static boolean didUserChange(User newUser) {
@@ -181,7 +224,11 @@ public class UserUtil {
                 || oldUser.getLatitude() != newUser.getLatitude()
                 || oldUser.getLongitude() != newUser.getLongitude()
                 || !oldUser.getProfilePicUrl().equals(newUser.getProfilePicUrl())
-                || oldUser.getCurrentCircleSession() != newUser.getCurrentCircleSession();
+                || oldUser.getCurrentCircleSession() != newUser.getCurrentCircleSession()
+                || (oldUser.getHeartRate() != null
+                && !oldUser.getHeartRate().equals(newUser.getHeartRate()))
+                || (oldUser.getStepCount() != null && newUser.getStepCount() != null
+                && oldUser.getStepCount().equals(newUser.getStepCount()));
     }
 
     private void addUsersChangeListener() {
@@ -256,6 +303,7 @@ public class UserUtil {
     public static void resetUser() {
         currentUser = null;
         registeredCircleTokens.clear();
+        currentCircleTokens.clear();
     }
 
     public interface UsersListener {

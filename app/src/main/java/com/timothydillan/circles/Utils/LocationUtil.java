@@ -194,7 +194,7 @@ public class LocationUtil {
                 BitmapShader shader = new BitmapShader(profilePic, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
                 Matrix matrix = new Matrix();
                 float scale = dp(52) / (float) profilePic.getWidth();
-                matrix.postTranslate(dp(6), dp(6));
+                matrix.postTranslate(dp(2), dp(2));
                 matrix.postScale(scale, scale);
                 roundPaint.setShader(shader);
                 shader.setLocalMatrix(matrix);
@@ -251,6 +251,9 @@ public class LocationUtil {
     }
 
     public HashMap<User, Marker> getMembers() {
+        return membersLocation;
+    }
+    public static HashMap<User, Marker> getMember() {
         return membersLocation;
     }
 
