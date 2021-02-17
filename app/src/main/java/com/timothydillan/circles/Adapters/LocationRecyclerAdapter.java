@@ -18,14 +18,14 @@ import com.timothydillan.circles.UI.VolleyImageRequest;
 import com.timothydillan.circles.Utils.LocationUtil;
 import java.util.ArrayList;
 
-public class CMemberRecyclerAdapter extends RecyclerView.Adapter<CMemberRecyclerAdapter.MyViewHolder> {
+public class LocationRecyclerAdapter extends RecyclerView.Adapter<LocationRecyclerAdapter.MyViewHolder> {
     private static ImageLoader imageLoader;
     private final ArrayList<User> listOfMembers;
     private final RecyclerViewClickListener listener;
     private final @LayoutRes int layoutId;
     private LocationUtil locationUtil;
 
-    public CMemberRecyclerAdapter(Context context, RecyclerViewClickListener listener, @LayoutRes int layoutId) {
+    public LocationRecyclerAdapter(Context context, RecyclerViewClickListener listener, @LayoutRes int layoutId) {
         this.listOfMembers = new ArrayList<>();
         this.listener = listener;
         this.layoutId = layoutId;
@@ -46,7 +46,7 @@ public class CMemberRecyclerAdapter extends RecyclerView.Adapter<CMemberRecycler
         private final NetworkImageView memberImage;
         public MyViewHolder(final View v) {
             super(v);
-            memberName = v.findViewById(R.id.memberName);
+            memberName = v.findViewById(R.id.healthTitle);
             lastSeen = v.findViewById(R.id.lastSeenMember);
             memberImage = v.findViewById(R.id.memberImageView);
             memberImage.setDefaultImageResId(R.drawable.logo);
@@ -66,13 +66,13 @@ public class CMemberRecyclerAdapter extends RecyclerView.Adapter<CMemberRecycler
 
     @NonNull
     @Override
-    public CMemberRecyclerAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public LocationRecyclerAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
         return new MyViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull CMemberRecyclerAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull LocationRecyclerAdapter.MyViewHolder holder, int position) {
         User user = listOfMembers.get(position);
         String fullName = user.getFirstName() + " " + user.getLastName();
         String lastSharingTime = "Since " + user.getLastSharingTime();
