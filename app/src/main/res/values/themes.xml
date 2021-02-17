@@ -32,4 +32,10 @@
         <item name="android:fontFamily">@font/dmsans</item>
     </style>
 
+    <style name="AlertDialogStyle" parent="@style/Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="android:textAppearanceSmall">@font/dmsans</item>
+        <item name="android:textAppearanceMedium">@font/dmsans</item>
+        <item name="android:textAppearanceLarge">@font/dmsans</item>
+    </style>
+
 </resources>

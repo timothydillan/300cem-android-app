@@ -14,8 +14,28 @@
         <!-- Customize your theme here. -->
     </style>
 
-    <style name="circularImageView">
+    <style name="CircularImageStyle">
         <item name="cornerFamily">rounded</item>
         <item name="cornerSize">50%</item>
     </style>
+
+    <style name="ChipStyle" parent="TextAppearance.MaterialComponents.Chip">
+        <item name="android:fontFamily">@font/dmsans_bold</item>
+    </style>
+
+    <style name="BottomNavigationViewStyle">
+        <item name="fontFamily">@font/dmsans</item>
+        <item name="android:textSize">10sp</item>
+    </style>
+
+    <style name="ToolbarStyle" parent="@style/ThemeOverlay.AppCompat.DayNight.ActionBar">
+        <item name="android:fontFamily">@font/dmsans</item>
+    </style>
+
+    <style name="AlertDialogStyle" parent="@style/Theme.MaterialComponents.DayNight.Dialog.Alert">
+        <item name="android:textAppearanceSmall">@font/dmsans</item>
+        <item name="android:textAppearanceMedium">@font/dmsans</item>
+        <item name="android:textAppearanceLarge">@font/dmsans</item>
+    </style>
+
 </resources>
