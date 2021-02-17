@@ -1,2 +1,3 @@
+include ':circles_wear'
 include ':app'
 rootProject.name = "Circles"
