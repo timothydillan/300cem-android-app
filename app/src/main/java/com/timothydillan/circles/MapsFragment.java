@@ -1,6 +1,8 @@
 package com.timothydillan.circles;
 
+import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.net.Uri;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.LayoutInflater;
@@ -18,8 +20,10 @@ import com.google.android.gms.maps.GoogleMap;
 import com.google.android.gms.maps.OnMapReadyCallback;
 import com.google.android.gms.maps.SupportMapFragment;
 import com.google.android.gms.maps.model.LatLng;
+import com.google.android.gms.maps.model.Marker;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.firebase.database.DataSnapshot;
-import com.timothydillan.circles.Adapters.CMemberRecyclerAdapter;
+import com.timothydillan.circles.Adapters.LocationRecyclerAdapter;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.LocationUtil;
@@ -28,7 +32,7 @@ import com.timothydillan.circles.Utils.UserUtil;
 import java.util.ArrayList;
 import java.util.Objects;
 
-public class MapsFragment extends Fragment {
+public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClickListener {
     public static final String TAG = "MapsFragment";
     public static boolean mapTypeBool = true;
 
@@ -42,8 +46,8 @@ public class MapsFragment extends Fragment {
     // Views
     private CardView mapTypeButton;
     private RecyclerView circleMemberView;
-    private CMemberRecyclerAdapter.RecyclerViewClickListener circleMemberListener;
-    private CMemberRecyclerAdapter adapter;
+    private LocationRecyclerAdapter.RecyclerViewClickListener circleMemberListener;
+    private LocationRecyclerAdapter adapter;
 
     /* TODO:
     8. Saving data using ViewModel or onSaveInstanceState:
@@ -66,12 +70,17 @@ public class MapsFragment extends Fragment {
          */
         @Override
         public void onMapReady(GoogleMap googleMap) {
+            googleMap.setOnInfoWindowClickListener(MapsFragment.this);
             mMap = googleMap;
 
             locationUtil.setMap(googleMap);
             locationUtil.setMapAppearanceMode();
             locationUtil.setMapType(mapTypeBool);
             locationUtil.moveToLastCameraPosition();
+
+            if (!permissionUtil.hasLocationPermissions()) {
+                return;
+            }
 
             setUpMarkersAndList();
         }
@@ -152,20 +161,19 @@ public class MapsFragment extends Fragment {
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100 && grantResults.length > 0) {
+        if (requestCode == PermissionUtil.LOCATION_REQUEST_CODE && grantResults.length > 0) {
             for (int i = 0; i < grantResults.length; i++) {
                 if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("PermissionsRequest", permissions[i] + " granted.");
                 } else {
                     // If somehow one of the permissions are denied, show a permission dialog.
                     Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    permissionUtil.showPermissionsDialog(permissions[i], true);
+                    permissionUtil.showPermissionsDialog(permissions[i], 0);
                 }
             }
             // If everything goes well, reset the map, and "restart" the fragment.
             LocationUtil.resetMap();
-            assert getFragmentManager() != null;
-            getFragmentManager().beginTransaction().detach(this).attach(this).commit();
+            resetFragment();
         }
     }
 
@@ -175,8 +183,8 @@ public class MapsFragment extends Fragment {
         locationUtil.storeLastCameraPosition(mMap.getCameraPosition());
     }
 
-    private void setUpRecyclerView(CMemberRecyclerAdapter.RecyclerViewClickListener listener) {
-        adapter = new CMemberRecyclerAdapter(requireContext(), listener, R.layout.circle_member_list);
+    private void setUpRecyclerView(LocationRecyclerAdapter.RecyclerViewClickListener listener) {
+        adapter = new LocationRecyclerAdapter(requireContext(), listener, R.layout.circle_member_list);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(requireContext());
         circleMemberView.setLayoutManager(layoutManager);
         circleMemberView.setItemAnimator(new DefaultItemAnimator());
@@ -206,7 +214,7 @@ public class MapsFragment extends Fragment {
                     @Override
                     public void onUsersChange(@NonNull DataSnapshot snapshot) {
                         ArrayList<User> newMemberInformation = locationUtil.getUpdatedInformation(snapshot);
-                        if (!newMemberInformation.isEmpty())
+                        if (newMemberInformation != null && !newMemberInformation.isEmpty())
                             adapter.updateInformation(newMemberInformation);
                     }
                 });
@@ -222,8 +230,24 @@ public class MapsFragment extends Fragment {
     }
 
     private void resetFragment() {
-        assert getFragmentManager() != null;
-        getFragmentManager().beginTransaction().detach(this).attach(this).commit();
+        getParentFragmentManager().beginTransaction().detach(this).attach(this).commit();
     }
 
+
+    @Override
+    public void onInfoWindowClick(Marker marker) {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(requireContext());
+        builder.setTitle("Are you sure?")
+                .setMessage("Get directions to " + marker.getTitle() + "?")
+                .setCancelable(true)
+                .setPositiveButton("Yes", (dialogInterface, i) -> {
+                    // https://developers.google.com/maps/documentation/urls/android-intents#:~:text=Android%20developer%20documentation.-,Intent%20requests,as%20a%20View%20action%20%E2%80%94%20ACTION_VIEW%20.
+                    LatLng position = marker.getPosition();
+                    Uri gmmIntentUri = Uri.parse("google.navigation:q="+position.latitude+","+position.longitude);
+                    Intent mapIntent = new Intent(Intent.ACTION_VIEW, gmmIntentUri);
+                    mapIntent.setPackage("com.google.android.apps.maps");
+                    startActivity(mapIntent);
+                });
+        builder.show();
+    }
 }
