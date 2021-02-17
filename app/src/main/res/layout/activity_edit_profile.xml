@@ -142,11 +142,12 @@
                             app:layout_constraintTop_toTopOf="parent"
                             app:cardCornerRadius="50dp"
                             app:cardPreventCornerOverlap="false">
-                            <com.android.volley.toolbox.NetworkImageView
+                            <ImageView
                                 android:id="@+id/profileImageView"
                                 android:layout_width="match_parent"
                                 android:layout_height="match_parent"
                                 android:adjustViewBounds="true"
+                                app:srcCompat="@drawable/logo"
                                 android:scaleType="centerCrop"
                                 app:layout_constraintBottom_toBottomOf="parent"
                                 app:layout_constraintStart_toStartOf="parent"

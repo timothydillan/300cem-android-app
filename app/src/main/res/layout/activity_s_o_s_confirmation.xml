@@ -5,17 +5,18 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:fillViewport="true"
-    tools:context=".CrashConfirmationActivity">
+    tools:context=".SOSConfirmationActivity">
     <androidx.constraintlayout.widget.ConstraintLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent">
+
         <TextView
             android:id="@+id/textView2"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:layout_marginTop="68dp"
             android:fontFamily="@font/dmsans_bold"
-            android:text="Are you okay 🩺?"
+            android:text="Are you sure?"
             android:textColor="@color/primary_text"
             android:textSize="36sp"
             app:layout_constraintEnd_toEndOf="parent"
@@ -26,13 +27,13 @@
             android:id="@+id/textView4"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:paddingStart="30dp"
-            android:paddingEnd="30dp"
             android:layout_marginTop="16dp"
             android:layout_marginBottom="61dp"
             android:fontFamily="@font/dmsans"
             android:gravity="center"
-            android:text="The app detected that you encountered a crash 💥🚗 from the sensors implanted in your device. If you ignore this question or press the help button, a notification will be sent to your circle members."
+            android:paddingStart="30dp"
+            android:paddingEnd="30dp"
+            android:text="You have requested an SOS alert. All members in every circle that you are registered in will be notified. If you do not respond or press the help button, the notification will be sent."
             android:textSize="12sp"
             app:layout_constraintBottom_toTopOf="@+id/timerBar"
             app:layout_constraintEnd_toEndOf="parent"
@@ -43,7 +44,7 @@
         <ProgressBar
             android:id="@+id/timerBar"
             style="?android:attr/progressBarStyleHorizontal"
-            android:max="2000"
+            android:max="500"
             android:progress="0"
             android:layout_width="400dp"
             android:layout_height="400dp"
@@ -57,7 +58,7 @@
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             android:fontFamily="@font/dmsans_medium"
-            android:text="30"
+            android:text="10"
             android:textColor="@color/primary_text"
             android:textSize="80sp"
             app:layout_constraintBottom_toBottomOf="@+id/timerBar"
