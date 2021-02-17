@@ -1,61 +1,51 @@
 package com.timothydillan.circles;
 
-import android.app.Activity;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
-import android.hardware.Sensor;
-import android.hardware.SensorManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.core.content.ContextCompat;
 import androidx.fragment.app.Fragment;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
+import android.widget.EditText;
+import android.widget.ScrollView;
+import android.widget.TextView;
 
-import com.google.android.gms.auth.api.signin.GoogleSignIn;
-import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
-import com.google.android.gms.auth.api.signin.GoogleSignInOptionsExtension;
-import com.google.android.gms.fitness.Fitness;
-import com.google.android.gms.fitness.FitnessOptions;
-import com.google.android.gms.fitness.data.DataSource;
-import com.google.android.gms.fitness.data.DataType;
-import com.google.android.gms.fitness.request.DataSourcesRequest;
-import com.google.android.gms.maps.GoogleMap;
-import com.google.android.gms.tasks.OnFailureListener;
-import com.google.android.gms.tasks.OnSuccessListener;
+import com.timothydillan.circles.Services.WearableService;
+import com.timothydillan.circles.Utils.HealthUtil;
 import com.timothydillan.circles.Utils.PermissionUtil;
 
-import java.util.List;
-import java.util.Objects;
+import org.tensorflow.lite.support.label.Category;
+import org.tensorflow.lite.task.text.nlclassifier.NLClassifier;
 
-import static android.app.Activity.RESULT_OK;
+import java.io.IOException;
+import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 public class MoodsFragment extends Fragment {
 
-    private static final int GOOGLE_FIT_PERMISSIONS_REQUEST_CODE = 1;
     private static final String TAG = "MoodsFragment";
-    private PermissionUtil permissionUtil;
-
-    GoogleSignInOptionsExtension fitnessOptions =
-            FitnessOptions.builder()
-                    .addDataType(DataType.TYPE_HEART_RATE_BPM, FitnessOptions.ACCESS_READ)
-                    .build();
-
-    GoogleSignInAccount googleSignInAccount;
+    private static final String MODEL_PATH = "sentiment_analysis.tflite";
+    private ExecutorService executorService;
+    private TextView resultTextView;
+    private EditText inputEditText;
+    private ScrollView scrollView;
+    private Button predictButton;
+    private NLClassifier textClassifier;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        permissionUtil = new PermissionUtil(requireContext());
-        permissionUtil.requestFitPermissions();
-
-        googleSignInAccount = GoogleSignIn.getAccountForExtension(requireContext(), fitnessOptions);
-
+        executorService = Executors.newSingleThreadExecutor();
+        initializeModel();
     }
 
     @Override
@@ -68,65 +58,59 @@ public class MoodsFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        if (!GoogleSignIn.hasPermissions(googleSignInAccount, fitnessOptions)) {
-            GoogleSignIn.requestPermissions(Objects.requireNonNull(getActivity()),
-                    GOOGLE_FIT_PERMISSIONS_REQUEST_CODE,
-                    googleSignInAccount,
-                    fitnessOptions);
-        } else {
-            accessGoogleFit();
+        resultTextView = view.findViewById(R.id.result_text_view);
+        inputEditText = view.findViewById(R.id.input_text);
+        scrollView = view.findViewById(R.id.scroll_view);
+
+        predictButton = view.findViewById(R.id.predict_button);
+        predictButton.setOnClickListener(
+                (View v) -> {
+                    classify(inputEditText.getText().toString());
+                });
+    }
+
+    private void initializeModel() {
+        try {
+            textClassifier = NLClassifier.createFromFile(requireContext(), MODEL_PATH);
+        } catch (IOException e) {
+            e.printStackTrace();
+            Log.d(TAG, "Failure in opening model file.");
         }
     }
 
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
-                                           @NonNull int[] grantResults) {
-        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100 && grantResults.length > 0) {
-            for (int i = 0; i < grantResults.length; i++) {
-                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
-                    Log.d("PermissionsRequest", permissions[i] + " granted.");
-                } else {
-                    // If somehow one of the permissions are denied, show a permission dialog.
-                    Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    permissionUtil.showPermissionsDialog(permissions[i], false);
+    /** Send input text to TextClassificationClient and get the classify messages. */
+    private void classify(final String text) {
+        executorService.execute(
+            () -> {
+                List<Category> results = textClassifier.classify(text);
+
+                StringBuilder textToShow = new StringBuilder("Input: " + text + "\nOutput:\n");
+                for (int i = 0; i < results.size(); i++) {
+                    Category result = results.get(i);
+                    textToShow.append(String.format("    %s: %s\n", result.getLabel(),
+                            result.getScore()));
                 }
-            }
-            assert getFragmentManager() != null;
-            getFragmentManager().beginTransaction().detach(this).attach(this).commit();
-        }
+
+                textToShow.append("---------\n");
+
+                // Show classification result on screen
+                showResult(textToShow.toString());
+            });
     }
 
-    @Override
-    public void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
-        super.onActivityResult(requestCode, resultCode, data);
-        if (requestCode == GOOGLE_FIT_PERMISSIONS_REQUEST_CODE && resultCode == RESULT_OK) {
-            accessGoogleFit();
-        }
-    }
+    /** Show classification result on the screen. */
+    private void showResult(final String textToShow) {
+        // Run on UI thread as we'll updating our app UI
+        requireActivity().runOnUiThread(
+                () -> {
+                    // Append the result to the UI.
+                    resultTextView.append(textToShow);
 
-    private void accessGoogleFit() {
-        Fitness.getSensorsClient(requireContext(), GoogleSignIn.getAccountForExtension(requireContext(), fitnessOptions))
-                .findDataSources(
-                        new DataSourcesRequest.Builder()
-                                .setDataTypes(DataType.TYPE_HEART_RATE_BPM)
-                                .setDataSourceTypes(DataSource.TYPE_RAW)
-                                .build())
-                .addOnSuccessListener(new OnSuccessListener<List<DataSource>>() {
-                    @Override
-                    public void onSuccess(List<DataSource> dataSources) {
-                        for (DataSource i : dataSources) {
-                            Log.d(TAG, i.getStreamIdentifier());
-                            Log.d(TAG, i.getDataType().getName());
-                        }
-                    }
-                })
-                .addOnFailureListener(new OnFailureListener() {
-                    @Override
-                    public void onFailure(@NonNull Exception e) {
-                        Log.e(TAG, "Find data sources request failed", e);
+                    // Clear the input text.
+                    inputEditText.getText().clear();
 
-                    }
+                    // Scroll to the bottom to show latest entry's classification result.
+                    scrollView.post(() -> scrollView.fullScroll(View.FOCUS_DOWN));
                 });
     }
 }
