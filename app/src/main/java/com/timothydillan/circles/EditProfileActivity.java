@@ -7,49 +7,64 @@ import androidx.appcompat.content.res.AppCompatResources;
 import androidx.appcompat.widget.Toolbar;
 
 import android.content.Intent;
+import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.net.Uri;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
 import android.util.Log;
+import android.view.LayoutInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ArrayAdapter;
 import android.widget.AutoCompleteTextView;
 import android.widget.EditText;
+import android.widget.ImageView;
 import android.widget.LinearLayout;
 import android.widget.TextView;
-import android.widget.Toast;
 
+import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.NetworkImageView;
+import com.google.android.gms.maps.model.BitmapDescriptorFactory;
+import com.google.android.material.button.MaterialButton;
 import com.google.android.material.chip.Chip;
 import com.google.android.material.datepicker.MaterialDatePicker;
+import com.google.android.material.dialog.MaterialAlertDialogBuilder;
 import com.google.android.material.snackbar.Snackbar;
+import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.database.DataSnapshot;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.UI.VolleyImageRequest;
+import com.timothydillan.circles.Utils.SharedPreferencesUtil;
 import com.timothydillan.circles.Utils.UserUtil;
+
+import java.util.concurrent.atomic.AtomicReference;
 
 public class EditProfileActivity extends AppCompatActivity {
 
+    private SharedPreferencesUtil sharedPreferences;
     // Constants
     private static final String DATE_PICKER_TAG = "DATE_PICKER";
     private static final String FIREBASE_TAG = "firebaseRelated";
     private static final int GALLERY_REQUEST_CODE = 102;
     private static ImageLoader imageLoader;
+    private static String[] genders;
+    private static ArrayAdapter<String> genderAdapter;
 
     // Views
     //private ImageView profileImageView;
-    private NetworkImageView profileImageView;
+    private ImageView profileImageView;
     private EditText firstNameEditText;
     private EditText lastNameEditText;
     private AutoCompleteTextView genderDropdown;
     private TextView birthdayTextView;
     private TextView emailTextView;
     private TextView phoneTextView;
-    private LinearLayout genderLayout, birthdayLayout;
+    private LinearLayout genderLayout;
+    private LinearLayout birthdayLayout;
     private Chip addInfoChip, saveChip;
     private final MaterialDatePicker.Builder<Long> dateBuilder = MaterialDatePicker.Builder.datePicker();
     private MaterialDatePicker<Long> datePicker;
@@ -69,6 +84,8 @@ public class EditProfileActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_edit_profile);
 
+        sharedPreferences = new SharedPreferencesUtil(this);
+
         float dpRatio = getResources().getDisplayMetrics().density;
         TEN_DP = (int) (10 * dpRatio);
 
@@ -83,7 +100,6 @@ public class EditProfileActivity extends AppCompatActivity {
                 updateUserProfile(snapshot);
             }
         });
-
         Toolbar toolbar = findViewById(R.id.editDetailsToolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -91,7 +107,12 @@ public class EditProfileActivity extends AppCompatActivity {
         dateBuilder.setTitleText("SELECT YOUR BIRTH DATE");
         datePicker = dateBuilder.build();
 
+        genders = getResources().getStringArray(R.array.gender_options);
+        genderAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
+                genders);
+
         profileImageView = findViewById(R.id.profileImageView);
+
         firstNameEditText = findViewById(R.id.firstNameEditText);
         lastNameEditText = findViewById(R.id.lastNameEditText);
         genderDropdown = findViewById(R.id.genderDropdown);
@@ -102,10 +123,6 @@ public class EditProfileActivity extends AppCompatActivity {
         birthdayLayout = findViewById(R.id.birthdayLayout);
         addInfoChip = findViewById(R.id.addInfoChip);
         saveChip = findViewById(R.id.saveInfoChip);
-
-        final String[] genders = getResources().getStringArray(R.array.gender_options);
-        final ArrayAdapter<String> genderAdapter = new ArrayAdapter<>(this, android.R.layout.simple_list_item_1,
-                genders);
 
         genderDropdown.setAdapter(genderAdapter);
 
@@ -130,6 +147,12 @@ public class EditProfileActivity extends AppCompatActivity {
         }
     }
 
+    @Override
+    protected void onPause() {
+        super.onPause();
+        sharedPreferences.writeBoolean(SharedPreferencesUtil.ACTIVITY_APP_KEY, true);
+    }
+
     private void updateProfileViews() {
         firstNameEditText.setText(currentMember.getFirstName());
         lastNameEditText.setText(currentMember.getLastName());
@@ -140,23 +163,33 @@ public class EditProfileActivity extends AppCompatActivity {
 
         birthdayLayout.setVisibility(currentMember.getBirthDate().isEmpty() ? View.GONE : View.VISIBLE);
         genderLayout.setVisibility(currentMember.getGender().isEmpty() ? View.GONE : View.VISIBLE);
-        addInfoChip.setVisibility(currentMember.getBirthDate().isEmpty()
-                || currentMember.getGender().isEmpty() ? View.VISIBLE : View.GONE);
-        addInfoChip.setVisibility(currentMember.getBirthDate().isEmpty()
-                || currentMember.getGender().isEmpty() ? View.VISIBLE : View.GONE);
+        if (currentMember.getBirthDate().isEmpty()
+                || currentMember.getGender().isEmpty()) {
+            addInfoChip.setVisibility(View.VISIBLE);
+        } else {
+            addInfoChip.setVisibility(View.GONE);
+        }
 
         String profilePicUrl = currentMember.getProfilePicUrl();
         if (!profilePicUrl.isEmpty() && imageUri == null) {
-            imageLoader.get(profilePicUrl, ImageLoader.getImageListener(profileImageView, R.drawable.logo, android.R.drawable.ic_dialog_alert));
-            profileImageView.setImageUrl(profilePicUrl, imageLoader);
+            imageLoader.get(profilePicUrl, new ImageLoader.ImageListener() {
+                @Override
+                public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                    Bitmap imageBitmap = response.getBitmap() != null ? response.getBitmap() :
+                            BitmapFactory.decodeResource(getResources(), R.drawable.logo);
+                    profileImageView.setImageBitmap(imageBitmap);
+                }
+                @Override
+                public void onErrorResponse(VolleyError error) { }
+            });
         }
 
-        /*if (!currentMember.getProfilePicUrl().isEmpty() && imageUri == null && activityIsValid()) {
-            Glide.with(this).load(currentMember.getProfilePicUrl()).into(profileImageView);
-        }*/
+        if (addInfoChip.getVisibility() == View.VISIBLE) {
+            ((ViewGroup.MarginLayoutParams) saveChip.getLayoutParams()).setMarginStart(TEN_DP);
+        } else {
+            ((ViewGroup.MarginLayoutParams) saveChip.getLayoutParams()).setMarginStart(0);
+        }
 
-        ((ViewGroup.MarginLayoutParams) saveChip.getLayoutParams()).setMarginStart(
-                addInfoChip.getVisibility() == View.VISIBLE ? TEN_DP : 0);
     }
 
     public void onSaveButtonClick(View v) {
@@ -188,14 +221,14 @@ public class EditProfileActivity extends AppCompatActivity {
         userUtil.updateDbUserGender(gender);
     }
 
-    public boolean activityIsValid() {
-        return !this.isFinishing() && !this.isDestroyed();
-    }
-
     private void updateUserProfile(DataSnapshot snapshot) {
         User user = snapshot.child(currentMember.getUid()).getValue(User.class);
-        UserUtil.updateCurrentUser(user);
-        updateProfileViews();
+        if (UserUtil.didUserChange(user)) {
+            changeChipColor();
+            UserUtil.updateCurrentUser(user);
+            updateProfileViews();
+        }
+
     }
 
     private void initializeChangeListeners() {
@@ -278,6 +311,60 @@ public class EditProfileActivity extends AppCompatActivity {
     }
 
     public void toast(View v) {
-        Toast.makeText(this, "TOAST!", Toast.LENGTH_SHORT).show();
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this, R.style.AlertDialogStyle);
+        builder.setTitle("Add additional info");
+        // I'm using fragment here so I'm using getView() to provide ViewGroup
+        // but you can provide here any other instance of ViewGroup from your Fragment / Activity
+        View viewInflated = LayoutInflater.from(this).inflate(R.layout.additional_info_layout, (ViewGroup) findViewById(android.R.id.content), false);
+        // Set up the input
+
+        TextInputLayout genderView = viewInflated.findViewById(R.id.genderLayout);
+        MaterialButton birthdayButton = viewInflated.findViewById(R.id.birthdayButton);
+        AutoCompleteTextView genderInput = viewInflated.findViewById(R.id.genderInput);
+
+        genderView.setVisibility(genderDropdown.getText().toString().length() < 2 ? View.VISIBLE : View.GONE);
+        birthdayButton.setVisibility(birthdayTextView.getText().toString().length() < 2 ? View.VISIBLE : View.GONE);
+
+        genderInput.setOnFocusChangeListener((view, b) -> {
+            if (b) { genderInput.showDropDown(); }
+        });
+
+        genderInput.setOnTouchListener((view, motionEvent) -> {
+            genderInput.showDropDown();
+            return false;
+        });
+
+        genderInput.setAdapter(genderAdapter);
+        // Specify the type of input expected; this, for example, sets the input as a password, and will mask the text
+        builder.setView(viewInflated);
+
+        AtomicReference<String> date = new AtomicReference<>("");
+
+        birthdayButton.setOnClickListener(view -> {
+            datePicker.show(getSupportFragmentManager(), DATE_PICKER_TAG);
+            datePicker.addOnPositiveButtonClickListener(selection -> {
+                date.set(datePicker.getHeaderText());
+                birthdayButton.setText(datePicker.getHeaderText() + " - Edit?");
+            });
+            datePicker.addOnNegativeButtonClickListener(view1 -> date.set(""));
+        });
+
+        // Set up the buttons
+        builder.setPositiveButton(android.R.string.ok, (dialog, which) -> {
+            dialog.dismiss();
+            String gender = genderInput.getText().toString();
+            if (!gender.isEmpty()) {
+                genderDropdown.setText(gender);
+                genderLayout.setVisibility(View.VISIBLE);
+            }
+
+            if (!date.get().isEmpty()) {
+                birthdayTextView.setText(date.get());
+                birthdayLayout.setVisibility(View.VISIBLE);
+            }
+        });
+
+        builder.setNegativeButton(android.R.string.cancel, (dialog, which) -> dialog.cancel());
+        builder.show();
     }
 }
