@@ -5,6 +5,7 @@ import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.constraintlayout.widget.ConstraintLayout;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.DividerItemDecoration;
@@ -15,7 +16,10 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
+import android.widget.Switch;
+import android.widget.Toast;
 
+import com.google.android.material.switchmaterial.SwitchMaterial;
 import com.timothydillan.circles.Adapters.RecyclerAdapter;
 import com.timothydillan.circles.Models.ItemModel;
 import com.timothydillan.circles.Services.CrashService;
@@ -23,6 +27,8 @@ import com.timothydillan.circles.Services.LocationService;
 import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.FirebaseUtil;
 import com.timothydillan.circles.Utils.LocationUtil;
+import com.timothydillan.circles.Utils.PermissionUtil;
+import com.timothydillan.circles.Utils.SharedPreferencesUtil;
 import com.timothydillan.circles.Utils.UserUtil;
 
 public class SettingsFragment extends Fragment {
@@ -40,26 +46,28 @@ public class SettingsFragment extends Fragment {
             2. Notification that we're currently tracking him/her
             3. Mood notifications
     3. Privacy & Security
-        1. Password/Fingerprint/FaceID
-        2. Terms & Conditions
-        3. Privacy Policy
+        1. Password
     */
-    private final ItemModel circleConfigItemList = new ItemModel();
-    private final ItemModel accountConfigItemList = new ItemModel();
-    private final ItemModel privacyConfigItemList = new ItemModel();
+
+    private ItemModel circleConfigItemList = new ItemModel();
+    private ItemModel accountConfigItemList = new ItemModel();
+    private ConstraintLayout passwordButton;
+    private SwitchMaterial biometricsSwitch;
+    private SharedPreferencesUtil sharedPreferences;
+    private PermissionUtil permissionUtil;
 
     private RecyclerAdapter.RecyclerViewClickListener circleConfigListener;
     private RecyclerAdapter.RecyclerViewClickListener accountConfigListener;
-    private RecyclerAdapter.RecyclerViewClickListener privacyConfigListener;
 
     private Button signOutButton;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
+        sharedPreferences = new SharedPreferencesUtil(requireContext());
+        permissionUtil = new PermissionUtil(requireContext());
         addCircleConfigurations();
         addAccountConfigurations();
-        addPrivacyConfigurations();
     }
 
     private void setUpRecyclerView(RecyclerView recyclerView, ItemModel itemList, RecyclerAdapter.RecyclerViewClickListener listener) {
@@ -74,7 +82,7 @@ public class SettingsFragment extends Fragment {
     }
 
     private void addCircleConfigurations() {
-        circleConfigItemList.addItem("Edit Circle Name", JoinCircleActivity.class);
+        circleConfigItemList.addItem("Edit Circle Name", EditCircleNameActivity.class);
         circleConfigItemList.addItem("Remove Circle", JoinCircleActivity.class);
         circleConfigItemList.addItem("Circle Members", CircleMembersActivity.class);
         circleConfigItemList.addItem("Circle Places", JoinCircleActivity.class);
@@ -87,12 +95,6 @@ public class SettingsFragment extends Fragment {
         accountConfigItemList.addItem("Notifications", JoinCircleActivity.class);
     }
 
-    private void addPrivacyConfigurations() {
-        privacyConfigItemList.addItem("Password", CrashConfirmationActivity.class);
-        privacyConfigItemList.addItem("Fingerprint", JoinCircleActivity.class);
-        privacyConfigItemList.addItem("Face ID", JoinCircleActivity.class);
-    }
-
     private void setCircleOnClickListener() {
         circleConfigListener = (v, position) -> {
             startActivity(circleConfigItemList, position);
@@ -102,12 +104,6 @@ public class SettingsFragment extends Fragment {
     private void setAccountOnClickListener() {
         accountConfigListener = (v, position) -> {
             startActivity(accountConfigItemList, position);
-        };
-    }
-
-    private void setPrivacyOnClickListener() {
-        privacyConfigListener = (v, position) -> {
-            startActivity(privacyConfigItemList, position);
         };
     }
 
@@ -129,19 +125,31 @@ public class SettingsFragment extends Fragment {
         super.onViewCreated(view, savedInstanceState);
         RecyclerView circleConfigView = view.findViewById(R.id.circleConfigurations);
         RecyclerView accountConfigView = view.findViewById(R.id.accountConfigurations);
-        RecyclerView privacyConfigView = view.findViewById(R.id.privacyConfigurations);
+        passwordButton = view.findViewById(R.id.passwordButton);
         signOutButton = view.findViewById(R.id.signOutButton);
+        biometricsSwitch = view.findViewById(R.id.fingeprintSwitch);
+
+        passwordButton.setOnClickListener(view1 -> {
+            Intent intent = new Intent(requireContext(), FingerprintActivity.class);
+            startActivity(intent);
+            requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        });
+
+        biometricsSwitch.setChecked(sharedPreferences.isBiometricsSecurityEnabled());
+
+        biometricsSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
+            permissionUtil.requestBiometricPermissions();
+            sharedPreferences.writeBoolean(SharedPreferencesUtil.BIOMETRICS_KEY, b);
+            Toast.makeText(requireContext(), b ? "Biometric authentication enabled." : "Biometric authentication disabled.", Toast.LENGTH_SHORT).show();
+        });
+
+        signOutButton.setOnClickListener(v -> signOut());
 
         setCircleOnClickListener();
         setUpRecyclerView(circleConfigView, circleConfigItemList, circleConfigListener);
 
         setAccountOnClickListener();
         setUpRecyclerView(accountConfigView, accountConfigItemList, accountConfigListener);
-
-        setPrivacyOnClickListener();
-        setUpRecyclerView(privacyConfigView, privacyConfigItemList, privacyConfigListener);
-
-        signOutButton.setOnClickListener(v -> signOut());
     }
 
     public void signOut() {
