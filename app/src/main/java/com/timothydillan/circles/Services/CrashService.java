@@ -26,6 +26,7 @@ import com.google.android.gms.location.ActivityTransitionResult;
 import com.google.android.gms.location.DetectedActivity;
 
 import com.google.android.gms.tasks.Task;
+import com.timothydillan.circles.CrashConfirmationActivity;
 import com.timothydillan.circles.MainActivity;
 import com.timothydillan.circles.R;
 import com.timothydillan.circles.Receivers.ActivityTransitionsReceiver;
@@ -36,6 +37,8 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
 import java.util.Locale;
+
+import static android.app.PendingIntent.FLAG_ONE_SHOT;
 
 // https://developer.android.com/codelabs/activity-recognition-transition#0
 public class CrashService extends Services implements CrashListener.OnCrashListener, ActivityTransitionsReceiver.ActivityChangeListener {
@@ -76,14 +79,13 @@ public class CrashService extends Services implements CrashListener.OnCrashListe
     public void onCrash() {
         if (currentActivity != DetectedActivity.IN_VEHICLE || activityMode != ActivityTransition.ACTIVITY_TRANSITION_ENTER) {
             Log.d(TAG, "User is possibly in a crash accident!");
-            // TODO : Add another activity that confirms if the user is in an accident or not.
-            // If the user does not respond in "n" seconds, then send a notification to the circle.
             Vibrator vibrator = (Vibrator) getSystemService(Context.VIBRATOR_SERVICE);
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
                 vibrator.vibrate(VibrationEffect.createOneShot(VIBRATION_DURATION, VibrationEffect.DEFAULT_AMPLITUDE));
             } else {
                 vibrator.vibrate(VIBRATION_DURATION);
             }
+            startActivity(new Intent(this, CrashConfirmationActivity.class));
         }
     }
 
@@ -164,10 +166,9 @@ public class CrashService extends Services implements CrashListener.OnCrashListe
 
     void startCrashService() {
         Log.d(TAG, "Crash service started.");
-        Intent safetyIntent = new Intent();
+        Intent safetyIntent = new Intent(this, MainActivity.class);
         safetyIntent.putExtra(ACTIVITY_KEY, "safety");
-        safetyIntent.setClass(this, MainActivity.class);
-        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, safetyIntent, 0);
+        PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, safetyIntent, FLAG_ONE_SHOT);
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("crash notif")
                 .setContentText("hey there. currently checking if you got into a crash 🚗.")
@@ -208,12 +209,6 @@ public class CrashService extends Services implements CrashListener.OnCrashListe
             Log.d(TAG, info);
             currentActivity = event.getActivityType();
             activityMode = event.getTransitionType();
-            /*Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
-                    .setContentTitle("activity notif")
-                    .setContentText("hey there. seems like ur " + toActivityString(event.getActivityType()) + " right now.")
-                    .setSmallIcon(R.drawable.logo)
-                    .build();
-            notificationManager.notify(3, notification);*/
         }
     }
 
