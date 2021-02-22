@@ -34,6 +34,7 @@ import com.timothydillan.circles.Receivers.ActivityTransitionsReceiver;
 import com.timothydillan.circles.Utils.HealthUtil;
 import com.timothydillan.circles.Utils.MoodUtil;
 import com.timothydillan.circles.Utils.PermissionUtil;
+import com.timothydillan.circles.Utils.SharedPreferencesUtil;
 import com.timothydillan.circles.Utils.UserUtil;
 
 import java.text.ParseException;
@@ -77,7 +78,10 @@ public class CrashService extends Services implements CrashListener.OnCrashListe
         // If the stop button was clicked,
         if (intent.getAction() != null) {
             if (intent.getAction().equals(STOP_SERVICE)) {
-                // we'll remove the notification and stop the service.
+                // Remove the configuration data from the sharedpreferences
+                SharedPreferencesUtil sharedPreferencesUtil = new SharedPreferencesUtil(this);
+                sharedPreferencesUtil.removeItem(SharedPreferencesUtil.CRASH_KEY);
+                // and remove the notification and stop the service.
                 stopForeground(true);
                 stopSelf();
             }
@@ -217,7 +221,7 @@ public class CrashService extends Services implements CrashListener.OnCrashListe
 
         NotificationCompat.Builder notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle("crash notif")
-                .setContentText("hey there. currently checking if you got into a crash 🚗.")
+                .setContentText("hey there. currently checking if you got into a crash 💥🚗.")
                 .setSmallIcon(R.drawable.logo)
                 .setContentIntent(pendingIntent)
                 .addAction(R.drawable.logo, "Stop", stopPendingIntent);

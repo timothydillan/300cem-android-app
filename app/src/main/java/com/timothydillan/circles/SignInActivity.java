@@ -7,6 +7,14 @@ import android.util.Log;
 import android.view.View;
 import android.widget.Toast;
 
+import androidx.annotation.Nullable;
+
+import com.google.android.gms.auth.api.signin.GoogleSignIn;
+import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
+import com.google.android.gms.auth.api.signin.GoogleSignInClient;
+import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
+import com.google.android.gms.common.api.ApiException;
+import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -17,6 +25,9 @@ import com.timothydillan.circles.Utils.UserUtil;
 
 public class SignInActivity extends ActivityInterface implements UserUtil.UsersListener {
 
+    private static final String TAG = "SignInActivity";
+    private static final int GOOGLE_SIGN_IN_CODE = 1;
+
     private TextInputLayout emailLayout;
     private TextInputLayout passwordLayout;
     private String email;
@@ -24,11 +35,17 @@ public class SignInActivity extends ActivityInterface implements UserUtil.UsersL
     private UserUtil userUtil = UserUtil.getInstance();
     private View signInButton;
     private ProgressButton progressButton;
+    private GoogleSignInClient googleSignInClient;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
+
+        GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
+                .requestIdToken(getString(R.string.default_web_client_id))
+                .requestEmail()
+                .build();
 
         // Assign inputs to corresponding resource ids
         emailLayout = findViewById(R.id.emailInputLayout);
@@ -54,6 +71,7 @@ public class SignInActivity extends ActivityInterface implements UserUtil.UsersL
         }
 
         signInButton.setOnClickListener(v -> signIn());
+        googleSignInClient = GoogleSignIn.getClient(this, gso);
     }
 
     @Override
@@ -76,6 +94,28 @@ public class SignInActivity extends ActivityInterface implements UserUtil.UsersL
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
+    // https://firebase.google.com/docs/auth/android/google-signin
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+        if (requestCode == GOOGLE_SIGN_IN_CODE) {
+            Task<GoogleSignInAccount> task = GoogleSignIn.getSignedInAccountFromIntent(data);
+            if (task.isSuccessful()) {
+                try {
+                    // Google Sign In was successful, authenticate with Firebase
+                    GoogleSignInAccount account = task.getResult(ApiException.class);
+                    Log.d(TAG, "firebaseAuthWithGoogle:" + account.getId());
+                    userUtil.authenticateAccountWithCredentials(account.getIdToken());
+                } catch (ApiException e) {
+                    // Google Sign In failed, update UI appropriately
+                    Log.w(TAG, "Google sign in failed", e);
+                }
+            } else {
+                Log.e(TAG, task.getException().toString());
+            }
+        }
+    }
+
     public void signIn() {
         // Before signing the user in, we'll first check if the user has filled out the fields properly.
         if (!formValidation())
@@ -84,6 +124,15 @@ public class SignInActivity extends ActivityInterface implements UserUtil.UsersL
         // If they did, we'll sign in the user.
         progressButton.onLoading();
         userUtil.signIn(email, password);
+    }
+
+    public void googleSignIn(View v) {
+        Intent signInIntent = googleSignInClient.getSignInIntent();
+        startActivityForResult(signInIntent, GOOGLE_SIGN_IN_CODE);
+    }
+
+    public void facebookSignIn(View v) {
+        Toast.makeText(this, "Coming soon.", Toast.LENGTH_SHORT).show();
     }
 
     public boolean formValidation() {

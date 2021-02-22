@@ -261,6 +261,7 @@
                     android:layout_height="wrap_content"
                     android:layout_weight="1"
                     android:backgroundTint="@color/card_border_color"
+                    android:onClick="facebookSignIn"
                     app:cardCornerRadius="10dp">
 
                     <LinearLayout

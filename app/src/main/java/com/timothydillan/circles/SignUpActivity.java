@@ -107,6 +107,10 @@ public class SignUpActivity extends ActivityInterface implements UserUtil.UsersL
         startActivityForResult(signInIntent, GOOGLE_SIGN_IN_CODE);
     }
 
+    public void facebookSignIn(View v) {
+        Toast.makeText(this, "Coming soon.", Toast.LENGTH_SHORT).show();
+    }
+
     private void onSignUpButtonClick() {
         // Before registering the user, we'll first check if the user has filled out the fields properly.
         if (!formValidation())
