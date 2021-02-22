@@ -81,6 +81,7 @@ public class CircleUtil {
         }
 
         currentCircleCode = String.valueOf(userUtil.getCurrentUser().getCurrentCircleSession());
+        USER_UID = FirebaseUtil.getUid();
 
         final ArrayList<String> circleMemberUidList = new ArrayList<>();
 
@@ -147,6 +148,9 @@ public class CircleUtil {
         databaseReference.child("Users").child(USER_UID).child("currentCircleSession").addValueEventListener(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                if (FirebaseUtil.getCurrentUser() == null) {
+                    return;
+                }
                 int newCode = snapshot.getValue(Integer.class);
                 if (!currentCircleCode.equals(String.valueOf(newCode))) {
                     Log.d(TAG, "User circle code changed.");
@@ -175,6 +179,9 @@ public class CircleUtil {
             @Override
             public void onChildChanged(@NonNull DataSnapshot snapshot,
                                        @Nullable String previousChildName) {
+                if (FirebaseUtil.getCurrentUser() == null) {
+                    return;
+                }
                 // if it does,
                 Log.d(TAG, "Something has changed within the circle with the code: " +
                         currentCircleCode + ".");

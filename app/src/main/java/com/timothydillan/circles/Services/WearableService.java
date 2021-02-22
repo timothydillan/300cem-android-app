@@ -74,7 +74,7 @@ public class WearableService extends WearableListenerService {
     public void onDataChanged(DataEventBuffer dataEvents) {
         // If the firebase db reference is still null, we shouldn't receive data, since
         // the code below uses the database reference to update user data.
-        if (FirebaseUtil.getDbReference() == null) {
+        if (FirebaseUtil.getDbReference() == null || FirebaseUtil.getCurrentUser() == null) {
             return;
         }
         // When we receive data,

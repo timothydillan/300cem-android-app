@@ -16,7 +16,6 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.google.firebase.database.DataSnapshot;
 import com.timothydillan.circles.Adapters.MoodRecyclerAdapter;
@@ -34,9 +33,9 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
     private RecyclerView circleMoodsRecyclerView;
     private MoodRecyclerAdapter moodAdapter;
     private PermissionUtil permissionUtil;
-    private ProgressBar moodProgressBar;
     private MoodUtil moodUtil = MoodUtil.getInstance();
-    private boolean isWatchPaired = true;
+    private static boolean isWatchPaired = true;
+    private static boolean receivedData = false;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -44,7 +43,6 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
         moodUtil.initializeContext(requireContext());
         permissionUtil = new PermissionUtil(requireContext());
         permissionUtil.fitPermissions(requireActivity());
-
     }
 
     @Override
@@ -53,6 +51,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
         /* If the user goes out of the moods fragment and goes back in again,
          * request for fit permissions (if not granted) again. */
         permissionUtil.fitPermissions(requireActivity());
+        UserUtil.getInstance().registerListener(this);
     }
 
     @Override
@@ -60,7 +59,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_moods, container, false);
         // First check whether the user has already paired a wearable and has already granted fit permissions
-        if (permissionUtil.hasWatchApp() && permissionUtil.hasFitPermissions() && !moodUtil.getMemberMoodInformation().isEmpty()) {
+        if ((permissionUtil.hasWatchApp() && permissionUtil.hasFitPermissions() && !moodUtil.getMemberMoodInformation().isEmpty()) || receivedData) {
             // If the check above passes, check if the wearable service is running.
             if (!WearableService.isServiceRunning(requireContext())) {
                 // if it isn't then start the service.
@@ -86,7 +85,6 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
         }
 
         // If the view has been fully created, assign the views to their corresponding Resource IDs.
-        moodProgressBar = view.findViewById(R.id.moodProgressBar);
         circleMoodsRecyclerView = view.findViewById(R.id.moodRecylcerView);
         RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(requireContext());
         circleMoodsRecyclerView.setLayoutManager(layoutManager);
@@ -160,12 +158,19 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
     public void onUsersChange(@NonNull DataSnapshot snapshot) {
         // If the user node changed, get new mood information from the database
         ArrayList<User> newMemberInformation = moodUtil.getMemberMoodInformation(snapshot);
-        moodProgressBar.setVisibility(View.VISIBLE);
         if (newMemberInformation != null && !newMemberInformation.isEmpty()) {
-            moodProgressBar.setVisibility(View.GONE);
+            if (!receivedData) {
+                resetFragment();
+                receivedData = true;
+                isWatchPaired = true;
+            }
+            if (moodAdapter == null) {
+                return;
+            }
             // and update the recylcer view with the new information.
             moodAdapter.updateInformation(newMemberInformation);
         }
+
     }
 
     private void resetFragment() {

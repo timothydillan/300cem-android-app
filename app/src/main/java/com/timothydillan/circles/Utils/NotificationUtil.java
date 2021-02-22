@@ -37,12 +37,13 @@ public class NotificationUtil {
                 json.put("data", dataJson);
                 json.put("to", token);
 
+                // then we'll write the json to the post request
                 DataOutputStream os = new DataOutputStream(conn.getOutputStream());
                 os.writeBytes(json.toString());
 
+                // and once we're done, we'll flush and close the output stream, and close the connection made.
                 os.flush();
                 os.close();
-
                 conn.disconnect();
             } catch (Exception e) {
                 e.printStackTrace();

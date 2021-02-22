@@ -83,6 +83,10 @@ public class MoodRecyclerAdapter extends RecyclerView.Adapter<MoodRecyclerAdapte
         // We'll set the stroke color of each member's card according to their mood.
         // If the mood is negative, we'll set the color to blue.
         // If they're unwell, we'll set the color to green. Also if their OK/Neutral, we'll set it to red.
+        if (user.getMood() == null) {
+            return;
+        }
+
         if (user.getMood().equals("Negative")) {
             holder.parentLayout.setStrokeColor(ctx.getResources().getColor(R.color.logo_color_blue));
         } else if (user.getMood().equals("Unwell")) {
