@@ -30,7 +30,7 @@ public class MoodRecyclerAdapter extends RecyclerView.Adapter<MoodRecyclerAdapte
 
     public MoodRecyclerAdapter(Context context, RecyclerViewClickListener listener) {
         ctx = context;
-        this.listOfMembers = CircleUtil.getInstance().getCircleMembers();
+        this.listOfMembers = MoodUtil.getInstance().getMemberMoodInformation();
         this.listener = listener;
         this.layoutId = R.layout.circle_mood_list;
         imageLoader = VolleyImageRequest.getInstance(context).getImageLoader();
