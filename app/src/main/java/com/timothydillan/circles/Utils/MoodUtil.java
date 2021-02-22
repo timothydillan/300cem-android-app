@@ -23,11 +23,12 @@ public class MoodUtil {
     private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private static int currentUserActivity = 0;
     private static User currentUser = UserUtil.getInstance().getCurrentUser();
-    private String USER_UID = FirebaseUtil.getUid();
+    private static String USER_UID = FirebaseUtil.getUid();
     private WearableUtil wearableUtil;
 
     public static synchronized MoodUtil getInstance() {
         if (instance == null) {
+            USER_UID = FirebaseUtil.getUid();
             instance = new MoodUtil();
         }
         return instance;

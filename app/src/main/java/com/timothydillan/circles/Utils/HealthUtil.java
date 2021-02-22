@@ -33,7 +33,7 @@ public class HealthUtil {
     private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private static final int WEEKLY_MODE = 0;
     private static final int MONTHLY_MODE = 1;
-    private String USER_UID = FirebaseUtil.getUid();
+    private static String USER_UID = FirebaseUtil.getUid();
     private User currentUser = UserUtil.getInstance().getCurrentUser();
     private long cyclingStart;
     private long runningStart;
@@ -42,6 +42,7 @@ public class HealthUtil {
 
     public static synchronized HealthUtil getInstance() {
         if (instance == null) {
+            USER_UID = FirebaseUtil.getUid();
             instance = new HealthUtil();
         }
         return instance;
