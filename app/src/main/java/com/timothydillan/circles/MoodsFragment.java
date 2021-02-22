@@ -35,6 +35,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
     private PermissionUtil permissionUtil;
     private ProgressBar moodProgressBar;
     private MoodUtil moodUtil = MoodUtil.getInstance();
+    private boolean isWatchPaired = true;
 
     @Override
     public void onCreate(Bundle savedInstanceState) {
@@ -67,6 +68,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
             }
         } else {
             // If the checks returns false, set the view to the error layout.
+            isWatchPaired = false;
             view = inflater.inflate(R.layout.error_page_layout, container, false);
         }
         return view;
@@ -75,6 +77,9 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+        if (!isWatchPaired) {
+            return;
+        }
         // If the view has been fully created, assign the views to their corresponding Resource IDs.
         moodProgressBar = view.findViewById(R.id.moodProgressBar);
         circleMoodsRecyclerView = view.findViewById(R.id.moodRecylcerView);
