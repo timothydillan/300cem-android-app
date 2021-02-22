@@ -1,5 +1,6 @@
 package com.timothydillan.circles;
 
+import android.Manifest;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
@@ -16,6 +17,7 @@ import android.widget.Toast;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.cardview.widget.CardView;
+import androidx.core.app.ActivityCompat;
 import androidx.fragment.app.Fragment;
 import androidx.recyclerview.widget.DefaultItemAnimator;
 import androidx.recyclerview.widget.LinearLayoutManager;
@@ -100,7 +102,7 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
         super.onResume();
         /* If the user goes out of the maps fragment and goes back in again, request for location permissions (if not granted)
          * and re-register the circle listener (since we're unregistered the listener onPause()). */
-        permissionUtil.requestLocationPermissions();
+        permissionUtil.locationPermissions(requireActivity());
         if (mMap != null) {
             circleUtil.registerListener(MapsFragment.this);
         }
@@ -161,7 +163,6 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
                 } else {
                     // If somehow one of the permissions are denied, show a permission dialog.
                     Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    permissionUtil.showPermissionsDialog(permissions[i], 0);
                 }
             }
             // If everything goes well, reset the map, and "restart" the fragment.
@@ -257,6 +258,10 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
         // the selection will by default be the current user's circle.
         circleSpinner.setSelected(false);
         circleSpinner.setSelection(initialSpinnerPosition,false);
+
+        if (!permissionUtil.hasLocationPermissions()) {
+            return;
+        }
 
         // If an item is selected from the circle spinner,
         circleSpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {

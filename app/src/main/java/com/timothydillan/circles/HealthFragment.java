@@ -53,7 +53,7 @@ public class HealthFragment extends Fragment implements UserUtil.UsersListener, 
         healthUtil.initializeContext(requireContext());
         permissionUtil = new PermissionUtil(requireContext());
         // Ensure that activity recognition permissions are given, because this fragment uses that permission.
-        permissionUtil.requestFitPermissions();
+        permissionUtil.fitPermissions(requireActivity());
         // Get the current mode that the fragment is currently in (0 -> Circle Summary, 1 -> Member Summary)
         // From Lab 8
         healthMode = getArguments().getInt(MODE_KEY);
@@ -83,7 +83,7 @@ public class HealthFragment extends Fragment implements UserUtil.UsersListener, 
          * request for fit permissions (if not granted) again.
          * We'll also re-register the listener here, so that the app works when the user
          * goes out and goes back in again.*/
-        permissionUtil.requestFitPermissions();
+        permissionUtil.fitPermissions(requireActivity());
         if (circleHealthAdapter != null || memberHealthAdapter != null) {
             UserUtil.getInstance().registerListener(this);
         }
@@ -132,7 +132,6 @@ public class HealthFragment extends Fragment implements UserUtil.UsersListener, 
                 } else {
                     // If somehow one of the permissions are denied, show a permission dialog.
                     Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    permissionUtil.showPermissionsDialog(permissions[i], 1);
                 }
             }
             // We don't really care whether the user has allowed or denied the permissions since

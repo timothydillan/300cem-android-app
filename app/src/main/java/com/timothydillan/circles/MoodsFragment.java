@@ -43,7 +43,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
         super.onCreate(savedInstanceState);
         moodUtil.initializeContext(requireContext());
         permissionUtil = new PermissionUtil(requireContext());
-        permissionUtil.requestFitPermissions();
+        permissionUtil.fitPermissions(requireActivity());
 
     }
 
@@ -52,7 +52,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
         super.onResume();
         /* If the user goes out of the moods fragment and goes back in again,
          * request for fit permissions (if not granted) again. */
-        permissionUtil.requestFitPermissions();
+        permissionUtil.fitPermissions(requireActivity());
     }
 
     @Override
@@ -113,14 +113,13 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        if (requestCode == 100 && grantResults.length > 0) {
+        if (requestCode == PermissionUtil.FIT_REQUEST_CODE && grantResults.length > 0) {
             for (int i = 0; i < grantResults.length; i++) {
                 if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
                     Log.d("PermissionsRequest", permissions[i] + " granted.");
                 } else {
                     // If somehow one of the permissions are denied, show a permission dialog.
                     Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    permissionUtil.showPermissionsDialog(permissions[i], 1);
                 }
             }
             getParentFragmentManager().beginTransaction().detach(this).attach(this).commit();

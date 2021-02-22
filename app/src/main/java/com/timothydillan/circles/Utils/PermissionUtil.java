@@ -14,14 +14,13 @@ import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 
 import com.google.android.material.dialog.MaterialAlertDialogBuilder;
-import com.timothydillan.circles.R;
 
 // A facade class made to use request and check for permissions easily. However, permission results still needs to be handled on the Activity.
 public class PermissionUtil {
     private static final boolean isDeviceQOrLater = android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.Q;
     public static final int LOCATION_REQUEST_CODE = 100;
     public static final int FIT_REQUEST_CODE = 101;
-    public static final int FINGERPRINT_REQUEST_CODE = 102;
+    public static final int BIOMETRIC_REQUEST_CODE = 102;
     private Context context;
 
     public PermissionUtil(Context context) {
@@ -134,6 +133,34 @@ public class PermissionUtil {
         }
     }
 
+    public void locationPermissions(Activity activity) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+            showPermissionsDialog(Manifest.permission.ACCESS_BACKGROUND_LOCATION, 0);
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+            showPermissionsDialog(Manifest.permission.ACCESS_FINE_LOCATION, 0);
+        } else {
+            requestLocationPermissions();
+        }
+    }
+
+    public void fitPermissions(Activity activity) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+            showPermissionsDialog(Manifest.permission.BODY_SENSORS, 1);
+        } else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACTIVITY_RECOGNITION)) {
+            showPermissionsDialog(Manifest.permission.ACTIVITY_RECOGNITION, 1);
+        } else {
+            requestFitPermissions();
+        }
+    }
+
+    public void biometricPermissions(Activity activity) {
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.USE_BIOMETRIC)) {
+            showPermissionsDialog(Manifest.permission.USE_BIOMETRIC, 2);
+        } else {
+            requestBiometricPermissions();
+        }
+    }
+
     public boolean hasBiometricPermissions() {
         KeyguardManager keyguardManager = (KeyguardManager) context.getSystemService(Context.KEYGUARD_SERVICE);
 
@@ -176,6 +203,6 @@ public class PermissionUtil {
 
         /* The code below will ask the necessary permissions for biometric usage */
         ActivityCompat.requestPermissions((Activity)context, new String[]
-                {Manifest.permission.USE_BIOMETRIC}, FINGERPRINT_REQUEST_CODE);
+                {Manifest.permission.USE_BIOMETRIC}, BIOMETRIC_REQUEST_CODE);
     }
 }

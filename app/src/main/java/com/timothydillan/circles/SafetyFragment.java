@@ -83,6 +83,13 @@ public class SafetyFragment extends Fragment {
     }
 
     @Override
+    public void onResume() {
+        super.onResume();
+        // Ask for fit permissions
+        permissionUtil.fitPermissions(requireActivity());
+    }
+
+    @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
         if (requestCode == PermissionUtil.FIT_REQUEST_CODE && grantResults.length > 0) {
@@ -92,7 +99,6 @@ public class SafetyFragment extends Fragment {
                 } else {
                     // If somehow one of the permissions are denied, show a permission dialog.
                     Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    permissionUtil.showPermissionsDialog(permissions[i], 1);
                 }
             }
             enableCrashDetection();
@@ -103,7 +109,7 @@ public class SafetyFragment extends Fragment {
         // If the enable crash detection button is clicked, check if fit permissions is granted
         if (!permissionUtil.hasFitPermissions()) {
             // If it isn't granted, request for it, and do nothing.
-            permissionUtil.requestFitPermissions();
+            permissionUtil.fitPermissions(requireActivity());
             return;
         }
         // If permissions are granted, turn on the crash detection service,

@@ -1,6 +1,7 @@
 package com.timothydillan.circles;
 
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
@@ -12,6 +13,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
@@ -91,11 +93,13 @@ public class SettingsFragment extends Fragment implements CircleUtil.CircleUtilL
 
         biometricsSwitch.setOnCheckedChangeListener((compoundButton, b) -> {
             // If the biometric switch is on, request biometric permissions.
-            if (b) { permissionUtil.requestBiometricPermissions(); }
-            // write the new value of the switch to sharedpreferences
-            sharedPreferences.writeBoolean(SharedPreferencesUtil.BIOMETRICS_KEY, b);
-            // and show a toast message that corresponds to the boolean value of the switch.
-            Toast.makeText(requireContext(), b ? "Biometric authentication enabled." : "Biometric authentication disabled.", Toast.LENGTH_SHORT).show();
+            if (b) { permissionUtil.biometricPermissions(requireActivity()); }
+            if (permissionUtil.hasBiometricPermissions()) {
+                // write the new value of the switch to sharedpreferences
+                sharedPreferences.writeBoolean(SharedPreferencesUtil.BIOMETRICS_KEY, b);
+                // and show a toast message that corresponds to the boolean value of the switch.
+                Toast.makeText(requireContext(), b ? "Biometric authentication enabled." : "Biometric authentication disabled.", Toast.LENGTH_SHORT).show();
+            }
         });
 
         signOutButton.setOnClickListener(v -> signOut());
@@ -125,6 +129,22 @@ public class SettingsFragment extends Fragment implements CircleUtil.CircleUtilL
         super.onPause();
         // We'll unregister the listener when the user leaves the activity because we don't need to update the settings data when the user isn't in the activity.
         CircleUtil.getInstance().unregisterListener(this);
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+        if (requestCode == PermissionUtil.BIOMETRIC_REQUEST_CODE && grantResults.length > 0) {
+            for (int i = 0; i < grantResults.length; i++) {
+                if (grantResults[i] == PackageManager.PERMISSION_GRANTED) {
+                    Log.d("PermissionsRequest", permissions[i] + " granted.");
+                } else {
+                    // If somehow one of the permissions are denied, show a permission dialog.
+                    Log.d("PermissionsRequest", permissions[i] + " denied.");
+                }
+            }
+            getParentFragmentManager().beginTransaction().detach(this).attach(this).commit();
+        }
     }
 
     private void setUpRecyclerView(RecyclerView recyclerView, Item itemList, SettingsRecyclerAdapter.RecyclerViewClickListener listener) {
