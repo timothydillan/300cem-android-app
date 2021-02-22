@@ -75,6 +75,11 @@ public class CircleUtil {
         }
 
         Log.d(TAG, "Circle not ready, initializing.");
+
+        if (userUtil.getCurrentUser() == null) {
+            return;
+        }
+
         currentCircleCode = String.valueOf(userUtil.getCurrentUser().getCurrentCircleSession());
 
         final ArrayList<String> circleMemberUidList = new ArrayList<>();
