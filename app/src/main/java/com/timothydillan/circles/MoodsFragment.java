@@ -15,6 +15,7 @@ import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
+import android.widget.Button;
 import android.widget.ProgressBar;
 import android.widget.Toast;
 import com.google.firebase.database.DataSnapshot;
@@ -79,8 +80,11 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
         super.onViewCreated(view, savedInstanceState);
 
         if (!isWatchPaired) {
+            Button addMemberButton = view.findViewById(R.id.addMemberButton);
+            addMemberButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), InviteCodeActivity.class)));
             return;
         }
+
         // If the view has been fully created, assign the views to their corresponding Resource IDs.
         moodProgressBar = view.findViewById(R.id.moodProgressBar);
         circleMoodsRecyclerView = view.findViewById(R.id.moodRecylcerView);
