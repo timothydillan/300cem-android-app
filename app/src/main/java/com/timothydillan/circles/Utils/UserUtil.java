@@ -402,6 +402,12 @@ public class UserUtil {
                 .setValue(circleCode);
     }
 
+    public void updateDbUserCurrentCircle(String uid, int circleCode) {
+        /* This function updates the a user's current circle session on the DB */
+        databaseReference.child("Users").child(uid).child("currentCircleSession")
+                .setValue(circleCode);
+    }
+
     public void setNewProfilePicture(Uri imageUri) {
         /* This function updates the current user's profile picture on both the DB and Firebase Auth */
         // We first get a storage reference pointing specifically to the "images/profileImages/USER_UID" node

@@ -7,6 +7,7 @@ import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
+import android.view.inputmethod.InputMethodManager;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
@@ -69,6 +70,9 @@ public class JoinCircleActivity extends ActivityInterface implements CircleUtil.
     }
 
     public void onJoinButtonClick(View v) {
+        // Hide the keyboard
+        InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
+        imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
 
         // If the user clicked the join button, get the circle code on the edit text,
         String circleCode = circleInput.getEditText().getText().toString();

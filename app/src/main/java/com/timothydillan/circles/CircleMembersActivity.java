@@ -21,6 +21,7 @@ import com.timothydillan.circles.Adapters.MemberRecyclerAdapter;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.SharedPreferencesUtil;
+import com.timothydillan.circles.Utils.UserUtil;
 
 public class CircleMembersActivity extends AppCompatActivity implements CircleUtil.CircleUtilListener {
 
@@ -143,6 +144,11 @@ public class CircleMembersActivity extends AppCompatActivity implements CircleUt
                 .setPositiveButton("Yes", (dialogInterface, i) -> {
                     // If the user confirms the operation, remove the member and show a message.
                     circleUtil.removeMember(member.getUid());
+                    // and update the user's current circle session remotely and locally.
+                    UserUtil.getInstance().updateDbUserCurrentCircle(member.getUid(), member.getMyCircle());
+
+                    CircleUtil.resetCircle();
+
                     Toast.makeText(CircleMembersActivity.this, "Removed " +
                             member.getFirstName() + " from your circle.", Toast.LENGTH_SHORT).show();
                 });
