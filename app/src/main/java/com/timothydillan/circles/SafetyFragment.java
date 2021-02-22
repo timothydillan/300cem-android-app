@@ -2,39 +2,31 @@ package com.timothydillan.circles;
 
 import android.animation.Animator;
 import android.animation.AnimatorListenerAdapter;
-import android.content.Context;
 import android.content.Intent;
-import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
-import android.graphics.drawable.AnimatedVectorDrawable;
-import android.graphics.drawable.Drawable;
 import android.os.Bundle;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.core.content.ContextCompat;
-import androidx.core.content.res.ResourcesCompat;
 import androidx.fragment.app.Fragment;
-import androidx.vectordrawable.graphics.drawable.AnimatedVectorDrawableCompat;
 
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.Button;
-import android.widget.ImageView;
 
 import com.timothydillan.circles.Services.CrashService;
-import com.timothydillan.circles.Utils.LocationUtil;
 import com.timothydillan.circles.Utils.PermissionUtil;
 import com.timothydillan.circles.Utils.SharedPreferencesUtil;
 
 public class SafetyFragment extends Fragment {
 
     private PermissionUtil permissionUtil;
-    private Button crashDetectButton;
+    private Button enableCrashDetectButton;
+    private Button disableCrashDetectButton;
     private Button sosButton;
-    private ImageView enabledImageView;
     private SharedPreferencesUtil sharedPreferences;
 
     @Override
@@ -54,33 +46,39 @@ public class SafetyFragment extends Fragment {
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
-        crashDetectButton = view.findViewById(R.id.crashDetectButton);
+
+        // When the view has been fully created, assign the views to the corresponding resource IDs.
+        enableCrashDetectButton = view.findViewById(R.id.crashDetectButton);
+        disableCrashDetectButton = view.findViewById(R.id.disableCrashDetectButton);
         sosButton = view.findViewById(R.id.sosButton);
 
-        enabledImageView = view.findViewById(R.id.enabledImageView);
-        enabledImageView.setVisibility(View.GONE);
+        // If crash detection isn't enabled,
         if (!sharedPreferences.isCrashDetectionEnabled()) {
-            crashDetectButton.setVisibility(View.VISIBLE);
+            // show the enable crash detection button, and hide the disable crash detet button.
+            enableCrashDetectButton.setVisibility(View.VISIBLE);
+            disableCrashDetectButton.setVisibility(View.GONE);
         } else {
-            crashDetectButton.setVisibility(View.GONE);
-            showEnabledAnimation();
+            // else, hide the crash detection button, and show the disable crash detect button.
+            enableCrashDetectButton.setVisibility(View.GONE);
+            disableCrashDetectButton.setVisibility(View.VISIBLE);
         }
+
+        // If the SOS button is clicked,
         sosButton.setOnClickListener(v -> {
+            // redirect the activity to the SOSConfirmationActvity.
             startActivity(new Intent(requireActivity(), SOSConfirmationActivity.class));
         });
 
-        crashDetectButton.setOnClickListener(v -> {
-            // start the foreground service.
-            if (permissionUtil.hasFitPermissions()) {
-                Intent crashForegroundService = new Intent(requireContext(), CrashService.class);
-                ContextCompat.startForegroundService(requireContext(), crashForegroundService);
-                if (sharedPreferences.writeBoolean(SharedPreferencesUtil.CRASH_KEY, true)) {
-                    removeButton(crashDetectButton);
-                    showEnabledAnimation();
-                }
-            } else {
-                permissionUtil.requestFitPermissions();
-            }
+        enableCrashDetectButton.setOnClickListener(v -> {
+            enableCrashDetection();
+        });
+
+        disableCrashDetectButton.setOnClickListener(v -> {
+            // If the disable crash detection button is clicked, stop the service, hide the
+            // disable crash detection button, and show the enable crash detection button.
+            requireActivity().stopService(new Intent(requireContext(), CrashService.class));
+            removeButton(disableCrashDetectButton);
+            showButton(enableCrashDetectButton);
         });
     }
 
@@ -97,35 +95,33 @@ public class SafetyFragment extends Fragment {
                     permissionUtil.showPermissionsDialog(permissions[i], 1);
                 }
             }
-            if (permissionUtil.hasFitPermissions()) {
-                Intent crashForegroundService = new Intent(requireContext(), CrashService.class);
-                ContextCompat.startForegroundService(requireContext(), crashForegroundService);
-                if (sharedPreferences.writeBoolean(SharedPreferencesUtil.CRASH_KEY, true)) {
-                    removeButton(crashDetectButton);
-                    showEnabledAnimation();
-                }
-            }
+            enableCrashDetection();
         }
     }
 
-    private void showEnabledAnimation() {
-        Drawable drawable = ResourcesCompat.getDrawable(requireContext().getResources(), R.drawable.animated_done, null);
-        enabledImageView.setImageDrawable(drawable);
-        enabledImageView.setVisibility(View.VISIBLE);
-        if (drawable instanceof AnimatedVectorDrawableCompat) {
-            AnimatedVectorDrawableCompat avdCompat = (AnimatedVectorDrawableCompat) drawable;
-            avdCompat.start();
-        } else if (drawable instanceof AnimatedVectorDrawable) {
-            AnimatedVectorDrawable avd = (AnimatedVectorDrawable) drawable;
-            avd.start();
+    private void enableCrashDetection() {
+        // If the enable crash detection button is clicked, check if fit permissions is granted
+        if (!permissionUtil.hasFitPermissions()) {
+            // If it isn't granted, request for it, and do nothing.
+            permissionUtil.requestFitPermissions();
+            return;
         }
+        // If permissions are granted, turn on the crash detection service,
+        Intent crashForegroundService = new Intent(requireContext(), CrashService.class);
+        ContextCompat.startForegroundService(requireContext(), crashForegroundService);
+        // and write to sharedpreferences that the user has enabled crash detection.
+        if (!sharedPreferences.writeBoolean(SharedPreferencesUtil.CRASH_KEY, true)) {
+            // if the write operation failed, return and do nothing.
+            return;
+        }
+        // then remove the enable crash detection buton, and show the disable crash detection button.
+        removeButton(enableCrashDetectButton);
+        showButton(disableCrashDetectButton);
     }
 
     private void removeButton(Button button) {
-
         // Animate the loading view to 0% opacity. After the animation ends,
-        // set its visibility to GONE as an optimization step (it won't
-        // participate in layout passes, etc.)
+        // set its visibility to GONE.
         button.animate()
                 .alpha(0f)
                 .setDuration(800)
@@ -133,6 +129,22 @@ public class SafetyFragment extends Fragment {
                     @Override
                     public void onAnimationEnd(Animator animation) {
                         button.setVisibility(View.GONE);
+                    }
+                });
+    }
+
+    private void showButton(Button button) {
+        // Animate the loading view to 100% opacity. After the animation ends,
+        // set its visibility to VISIBLE.
+        button.setAlpha(0f);
+        button.setVisibility(View.VISIBLE);
+        button.animate()
+                .alpha(1f)
+                .setDuration(800)
+                .setListener(new AnimatorListenerAdapter() {
+                    @Override
+                    public void onAnimationEnd(Animator animation) {
+                        button.setVisibility(View.VISIBLE);
                     }
                 });
     }

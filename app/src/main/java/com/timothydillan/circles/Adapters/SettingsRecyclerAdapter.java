@@ -9,18 +9,18 @@ import androidx.annotation.LayoutRes;
 import androidx.annotation.NonNull;
 import androidx.recyclerview.widget.RecyclerView;
 
-import com.timothydillan.circles.Models.ItemModel;
+import com.timothydillan.circles.Models.Item;
 import com.timothydillan.circles.R;
 
-public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyViewHolder> {
-    private final ItemModel listOfItems;
+public class SettingsRecyclerAdapter extends RecyclerView.Adapter<SettingsRecyclerAdapter.MyViewHolder> {
+    private final Item listOfItems;
     private final RecyclerViewClickListener listener;
     private final @LayoutRes int layoutId;
 
-    public RecyclerAdapter(ItemModel listOfItems, RecyclerViewClickListener listener, @LayoutRes int layoutId) {
+    public SettingsRecyclerAdapter(Item listOfItems, RecyclerViewClickListener listener) {
         this.listOfItems = listOfItems;
         this.listener = listener;
-        this.layoutId = layoutId;
+        this.layoutId = R.layout.settings_list_items;
     }
 
     public class MyViewHolder extends RecyclerView.ViewHolder implements View.OnClickListener {
@@ -40,13 +40,13 @@ public class RecyclerAdapter extends RecyclerView.Adapter<RecyclerAdapter.MyView
 
     @NonNull
     @Override
-    public RecyclerAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
+    public SettingsRecyclerAdapter.MyViewHolder onCreateViewHolder(@NonNull ViewGroup parent, int viewType) {
         View itemView = LayoutInflater.from(parent.getContext()).inflate(layoutId, parent, false);
         return new MyViewHolder(itemView);
     }
 
     @Override
-    public void onBindViewHolder(@NonNull RecyclerAdapter.MyViewHolder holder, int position) {
+    public void onBindViewHolder(@NonNull SettingsRecyclerAdapter.MyViewHolder holder, int position) {
         String name = listOfItems.getItemName(position);
         holder.itemName.setText(name);
     }

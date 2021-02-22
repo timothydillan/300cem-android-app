@@ -6,24 +6,6 @@
     android:layout_height="wrap_content"
     android:padding="20dp">
 
-    <com.google.android.material.textfield.TextInputLayout
-        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox.ExposedDropdownMenu"
-        android:id="@+id/genderLayout"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        app:layout_constraintBottom_toTopOf="@+id/birthdayLayout"
-        app:layout_constraintTop_toTopOf="parent"
-        tools:layout_editor_absoluteX="16dp">
-
-        <AutoCompleteTextView
-            android:id="@+id/genderInput"
-            android:layout_width="match_parent"
-            android:fontFamily="@font/dmsans"
-            android:hint="Gender"
-            android:layout_height="wrap_content" />
-
-    </com.google.android.material.textfield.TextInputLayout>
-
     <com.google.android.material.button.MaterialButton
         style="@style/Widget.MaterialComponents.Button.OutlinedButton"
         android:id="@+id/birthdayButton"
@@ -35,7 +17,6 @@
         android:layout_marginTop="16dp"
         android:text="ADD BIRTH DATE"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/genderLayout"
         tools:layout_editor_absoluteX="16dp" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>

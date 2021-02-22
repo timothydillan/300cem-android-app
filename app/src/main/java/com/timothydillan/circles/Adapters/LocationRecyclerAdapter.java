@@ -15,6 +15,7 @@ import com.android.volley.toolbox.NetworkImageView;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.R;
 import com.timothydillan.circles.UI.VolleyImageRequest;
+import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.LocationUtil;
 import java.util.ArrayList;
 
@@ -25,10 +26,10 @@ public class LocationRecyclerAdapter extends RecyclerView.Adapter<LocationRecycl
     private final @LayoutRes int layoutId;
     private LocationUtil locationUtil;
 
-    public LocationRecyclerAdapter(Context context, RecyclerViewClickListener listener, @LayoutRes int layoutId) {
-        this.listOfMembers = new ArrayList<>();
+    public LocationRecyclerAdapter(Context context, RecyclerViewClickListener listener) {
+        this.listOfMembers = CircleUtil.getInstance().getCircleMembers();
         this.listener = listener;
-        this.layoutId = layoutId;
+        this.layoutId = R.layout.circle_member_list;
         locationUtil = new LocationUtil(context);
         imageLoader = VolleyImageRequest.getInstance(context).getImageLoader();
     }
@@ -82,14 +83,16 @@ public class LocationRecyclerAdapter extends RecyclerView.Adapter<LocationRecycl
             holder.memberImage.setImageUrl(user.getProfilePicUrl(), imageLoader);
         }
         holder.memberName.setText(fullName);
-        holder.memberLocation.setText(locationUtil.getAddress(user.getLatitude(), user.getLongitude()));
         holder.lastSeen.setText(lastSharingTime);
+        holder.memberLocation.setText(locationUtil.getAddress(user.getLatitude(), user.getLongitude()));
     }
 
     @Override
     public int getItemCount() {
         return listOfMembers.size();
     }
+
+    public ArrayList<User> getListOfMembers() { return listOfMembers; }
 
     public interface RecyclerViewClickListener {
         void onClick(View v, int position);

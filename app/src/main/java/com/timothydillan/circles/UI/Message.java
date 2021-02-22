@@ -8,7 +8,6 @@ import com.google.android.material.snackbar.Snackbar;
 
 public class Message {
     private Context ctx;
-    private View v;
 
     public Message(Context context) {
         ctx = context;

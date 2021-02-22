@@ -1,9 +1,11 @@
 package com.timothydillan.circles.Utils;
 
+import android.os.Handler;
 import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import com.google.firebase.database.ChildEventListener;
 import com.google.firebase.database.DataSnapshot;
 import com.google.firebase.database.DatabaseError;
@@ -13,37 +15,47 @@ import com.timothydillan.circles.Models.Circle;
 import com.timothydillan.circles.Models.User;
 
 import java.util.ArrayList;
+import java.util.Random;
+import java.util.concurrent.TimeUnit;
 
 public class CircleUtil {
+    private static CircleUtil instance;
     private static final String TAG = "CircleUtil";
     private static final ArrayList<User> circleMembers = new ArrayList<>();
-    private static final String USER_UID = FirebaseUtil.getCurrentUser().getUid();
     private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
 
-    private static String pastCircleCode = String.valueOf(UserUtil.getCurrentUser().getCurrentCircleSession());
+    private UserUtil userUtil = UserUtil.getInstance();
+    private String currentCircleCode = String.valueOf(userUtil.getCurrentUser().getCurrentCircleSession());
+    private String USER_UID = FirebaseUtil.getCurrentUser().getUid();
+    private ArrayList<CircleUtilListener> listeners = new ArrayList<>();
 
-    private final String currentCircleCode = String.valueOf(UserUtil.getCurrentUser().getCurrentCircleSession());
-    private UserUtil userUtil = new UserUtil();
-    private CircleUtilListener listener;
+    private long THREE_SECONDS = TimeUnit.SECONDS.toMillis(3);
 
-    public void addEventListener(CircleUtilListener listener) {
-        // If a class provides the listener immediately on construct,
-        // set the circle listener to the new listener instance created,
-        this.listener = listener;
-        // and then check whether the currentUser and circleMembers are not null.
-        if (UserUtil.getCurrentUser() != null && !circleMembers.isEmpty() && pastCircleCode.equals(currentCircleCode)) {
-            Log.d(TAG, "Circle already ready, firing onCircleReady listener.");
-            // then trigger the onCircleReady event
-            this.listener.onCircleReady(circleMembers);
-            addCircleChangeListener();
-        } else {
-            Log.d(TAG, "Circle not ready, initializing.");
-            pastCircleCode = currentCircleCode;
+    private CircleUtil() {
+        addCircleChangeListener();
+    }
+
+    public static synchronized CircleUtil getInstance() {
+        if (instance == null) {
+            instance = new CircleUtil();
+        }
+        return instance;
+    }
+
+    public void registerListener(CircleUtilListener listener) {
+        if (!listeners.contains(listener)) {
+            listeners.add(listener);
             retrieveCircleMemberUid();
         }
     }
 
-    private void retrieveCircleMemberUid() {
+    public void unregisterListener(CircleUtilListener listener){
+        if (listener != null && listeners.contains(listener)){
+            listeners.remove(listener);
+        }
+    }
+
+    public void retrieveCircleMemberUid() {
         /* Retrieves all member UIDs listed in a circle.
          * Args:
          *   none
@@ -54,6 +66,16 @@ public class CircleUtil {
          *   once from the Circles table/node, specifically the user's current circle node.
          *   After each member's UID is retrieved and stored in the array list,
          *   the retrieveCircleMembers function will be called. */
+
+        if (circleMembers != null && !circleMembers.isEmpty()) {
+            for (CircleUtilListener listener : listeners){
+                listener.onCircleReady(circleMembers);
+            }
+            return;
+        }
+
+        Log.d(TAG, "Circle not ready, initializing.");
+        currentCircleCode = String.valueOf(userUtil.getCurrentUser().getCurrentCircleSession());
 
         final ArrayList<String> circleMemberUidList = new ArrayList<>();
 
@@ -69,7 +91,9 @@ public class CircleUtil {
                             // into the list.
                             Log.d(TAG, "Adding member UID into list.");
                             // we'll add every other member into the uid list array.
-                            circleMemberUidList.add(ds.getKey());
+                            if (!ds.getKey().equals(USER_UID)) {
+                                circleMemberUidList.add(ds.getKey());
+                            }
                         }
                         // Once all the data has been retrieved, each member's detail will now be
                         // retrieved.
@@ -86,12 +110,13 @@ public class CircleUtil {
     }
 
     private void retrieveCircleMembers(ArrayList<String> circleMemberUidList) {
-        // Clear the circle member list so the old data does not overlap with new one.
-        resetCircle();
         // Read the Users node once
         databaseReference.child("Users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
             public void onDataChange(@NonNull DataSnapshot snapshot) {
+                // Clear the circle member list so the old data does not overlap with new one.
+                resetCircle();
+                circleMembers.add(userUtil.getCurrentUser());
                 // get every member based on the UID retrieved
                 for (String uid : circleMemberUidList) {
                     User circleMember =  snapshot.child(uid).getValue(User.class);
@@ -99,9 +124,10 @@ public class CircleUtil {
                     circleMembers.add(circleMember);
                 }
                 // Once we're done with this, run a continuous event listener that updates each member's details.
-                listener.onCircleReady(circleMembers);
-                Log.d(TAG, "Circle initialization done. Running update circle function.");
-                addCircleChangeListener();
+                for (CircleUtilListener listener : listeners){
+                    listener.onCircleReady(circleMembers);
+                }
+                Log.d(TAG, "Circle initialization done.");
             }
 
             @Override
@@ -126,12 +152,19 @@ public class CircleUtil {
                 Log.d(TAG, "Something has changed within the circle with the code: " +
                         currentCircleCode + ".");
                 Log.d(TAG, "Calling onCircleChange, resetting and re-initializing circle.");
-                // trigger the onCircleChange event.
-                listener.onCircleChange();
                 // reset the circle (reset the data)
                 resetCircle();
                 // and re-initialize the circle.
                 retrieveCircleMemberUid();
+                // trigger the onCircleChange event.
+                userUtil.initializeCurrentUserRole();
+
+                // while we're reintializing the circle, wait for 3 seconds, and then trigger the oncirclechange method
+                new Handler().postDelayed(() -> {
+                    for (CircleUtilListener listener : listeners){
+                        listener.onCircleChange();
+                    }
+                }, THREE_SECONDS);
             }
 
             @Override
@@ -149,24 +182,6 @@ public class CircleUtil {
         });
     }
 
-    private void removeDuplicateMembers() {
-        ArrayList<User> noDuplicates = new ArrayList<>();
-        // For every member in the circleMembers array,
-        for (User member : circleMembers) {
-            // check if the member has already been added unto the noDuplicates list.
-            // if the member has already been added, continue to the next iteration.
-            if (noDuplicates.contains(member)) {
-                continue;
-            }
-            // if not, add the member into the noDuplicates list.
-            noDuplicates.add(member);
-        }
-        // Once the operation above is done, clear the circleMembers list
-        circleMembers.clear();
-        // and add the content from the list that has no duplicates unto the circleMembers list.
-        circleMembers.addAll(noDuplicates);
-    }
-
     public void joinCircle(String circleCode) {
         // Check if the circle exists.
         databaseReference.child("Circles").child(circleCode).addListenerForSingleValueEvent(new ValueEventListener() {
@@ -176,7 +191,9 @@ public class CircleUtil {
                 if (!snapshot.exists()) {
                     Log.d(TAG, "Circle doesn't exist.");
                     // trigger the event listener and return.
-                    listener.onJoinCircle(false);
+                    for (CircleUtilListener listener : listeners){
+                        listener.onJoinCircle(false);
+                    }
                     return;
                 }
                 // If it does exist, check if the member that's trying to go in is already in.
@@ -187,7 +204,9 @@ public class CircleUtil {
                         if (snapshot.exists()) {
                             Log.d(TAG, "Member has already joined this circle.");
                             // trigger the event listener and do nothing.
-                            listener.onJoinCircle(false);
+                            for (CircleUtilListener listener : listeners){
+                                listener.onJoinCircle(false);
+                            }
                             return;
                         }
                         // Else, add the member's UID into the Members node of the circle
@@ -200,31 +219,117 @@ public class CircleUtil {
                                 .addOnCompleteListener(task -> {
                                     if (task.isSuccessful()) {
                                         Log.d(TAG, "Successfully joined the circle.");
-                                        // and update the user's current circle session in the DB
-                                        userUtil.updateDbUserCurrentCircle(Integer.parseInt(circleCode));
-                                        // update the user's current circle session locally,
-                                        UserUtil.getCurrentUser().setCurrentCircleSession(Integer.parseInt(circleCode));
+                                        switchCircle(circleCode);
+
+
                                         // and trigger the listener.
-                                        listener.onJoinCircle(true);
+                                        for (CircleUtilListener listener : listeners){
+                                            listener.onJoinCircle(false);
+                                        }
                                     }
                                 });
                     }
                     @Override
                     public void onCancelled(@NonNull DatabaseError error) {
                         // if the operation is cancelled, return false.
-                        listener.onJoinCircle(false);
+                        for (CircleUtilListener listener : listeners){
+                            listener.onJoinCircle(false);
+                        }
                     }
                 });
             }
             @Override
             public void onCancelled(@NonNull DatabaseError error) {
-                listener.onJoinCircle(false);
+                for (CircleUtilListener listener : listeners){
+                    listener.onJoinCircle(false);
+                }
             }
         });
     }
 
+    public void switchCircle(String circleCode) {
+        userUtil.updateDbUserCurrentCircle(Integer.parseInt(circleCode));
+        userUtil.getCurrentUser().setCurrentCircleSession(Integer.parseInt(circleCode));
+        userUtil.reinitializeRegisteredCircles();
+        userUtil.initializeCurrentUserRole();
+        FirebaseUtil.initializeCircleName();
+        resetCircle();
+    }
+
+    public void createCircle(String circleName) {
+        // Generate a random 6-digit code
+        int circleCode = new Random().nextInt(999999);
+
+        // Create new circle with user's uid and him/her being an admin
+        Circle newCircle = new Circle("Admin");
+
+        databaseReference.child("Circles").child(String.valueOf(circleCode))
+                .child("name").setValue(circleName)
+                .addOnCompleteListener(
+                task ->
+                    databaseReference.child("Circles")
+                            .child(String.valueOf(circleCode))
+                            .child("Members")
+                            .child(USER_UID)
+                            .setValue(newCircle)
+                            .addOnCompleteListener(
+                            task1 -> {
+                                switchCircle(String.valueOf(circleCode));
+                                for (CircleUtilListener listener : listeners){
+                                    listener.onCreateCircle(true);
+                                }
+                            })
+                            .addOnFailureListener(e -> {
+                                for (CircleUtilListener listener : listeners){
+                                    listener.onCreateCircle(false);
+                                }
+                            })
+                            .addOnCanceledListener(() -> {
+                                for (CircleUtilListener listener : listeners){
+                                    listener.onCreateCircle(false);
+                                }
+                            }))
+                .addOnFailureListener(e -> {
+                    for (CircleUtilListener listener : listeners){
+                        listener.onCreateCircle(false);
+                    }
+                })
+                .addOnCanceledListener(() -> {
+                    for (CircleUtilListener listener : listeners){
+                        listener.onCreateCircle(false);
+                    }
+                });
+
+    }
+
+    public void editCircleName(String circleName) {
+        databaseReference
+                .child("Circles")
+                .child(String.valueOf(UserUtil.getInstance().getCurrentUser().getCurrentCircleSession()))
+                .child("name")
+                .setValue(circleName)
+                .addOnCompleteListener(task -> {
+                    for (CircleUtilListener listener : listeners) {
+                        listener.onEditCircleName(task.isSuccessful());
+                    }
+                });
+    }
+
+    public void removeMember(String userUid) {
+        databaseReference.child("Circles").child(currentCircleCode).child("Members").child(userUid).removeValue();
+    }
+
+    public void editMemberRole(String userUid, String role) {
+        databaseReference.child("Circles").child(currentCircleCode).child("Members").child(userUid).child("memberRole").setValue(role);
+    }
+
     public static void resetCircle() {
         circleMembers.clear();
+    }
+
+    public void reset() {
+        circleMembers.clear();
+        listeners.clear();
     }
 
     public ArrayList<User> getCircleMembers() {
@@ -232,9 +337,11 @@ public class CircleUtil {
     }
 
     public interface CircleUtilListener {
-        void onCircleReady(ArrayList<User> members);
-        void onCircleChange();
-        void onJoinCircle(boolean success);
+        default void onCircleReady(ArrayList<User> members) {}
+        default void onCircleChange() {}
+        default void onJoinCircle(boolean success) {}
+        default void onCreateCircle(boolean success) {}
+        default void onEditCircleName(boolean success) {}
     }
 
 }

@@ -8,8 +8,10 @@ import android.util.Log;
 
 import androidx.annotation.Nullable;
 
-// A superclass that overrides some methods that are repeated in services.
+// An abstract superclass that overrides some methods that are frequently repeated in the services implemented.
 public abstract class Services extends Service {
+
+    protected static final String STOP_SERVICE = "STOP_SERVICE";
 
     @Nullable
     @Override
@@ -19,6 +21,7 @@ public abstract class Services extends Service {
 
     @Override
     public void onDestroy() {
+        stopForeground(true);
         stopSelf();
     }
 

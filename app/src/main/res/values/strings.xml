@@ -9,10 +9,20 @@
     <string name="title_activity_maps">Map</string>
     <!-- TODO: Remove or change this placeholder text -->
     <string name="hello_blank_fragment">Hello blank fragment</string>
-    <string-array name="gender_options">
-        <item>Male</item>
-        <item>Female</item>
-        <item>Non-binary</item>
-        <item>Prefer not to disclose</item>
+    <string-array name="type_options">
+        <item>Normal</item>
+        <item>Athletic</item>
     </string-array>
+    <string name="sos_title">SOS 🆘</string>
+    <string name="share_title">Send circle code</string>
+    <string name="share_message">Hey there! Join my circle on the circles. app! Here\'s my code: </string>
+    <string name="circle_code_error">Error: A circle code has 6 digits.</string>
+    <string name="success_join_message">Successfully joined the circle.</string>
+    <string name="failure_join_message">Failed to join the circle.</string>
+    <string name="join_notification_title">New member joined!</string>
+    <string name="join_notification_message">New member joined!</string>
+    <string name="password_title_enabled">Password authentication enabled</string>
+    <string name="password_default_title">Enter a password</string>
+    <string name="password_description_enabled">The app is now more secure.</string>
+    <string name="password_default_description">Prevent people from taking a look at your circle.</string>
 </resources>

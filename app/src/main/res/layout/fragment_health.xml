@@ -59,6 +59,14 @@
                 android:text="Member"/>
         </com.google.android.material.button.MaterialButtonToggleGroup>
 
+        <ProgressBar
+            android:id="@+id/healthProgressBar"
+            android:layout_marginTop="@dimen/margin_top"
+            android:visibility="gone"
+            style="?android:attr/progressBarStyle"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
         <androidx.recyclerview.widget.RecyclerView
             android:id="@+id/healthMemberList"
             android:layout_marginTop="@dimen/margin_top"

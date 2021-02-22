@@ -3,45 +3,32 @@ package com.timothydillan.circles;
 import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 
-import android.content.SharedPreferences;
 import android.os.Bundle;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
 
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.Task;
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.database.DataSnapshot;
-import com.google.firebase.database.DatabaseError;
-import com.google.firebase.database.DatabaseReference;
-import com.google.firebase.database.FirebaseDatabase;
-import com.google.firebase.database.ValueEventListener;
-import com.timothydillan.circles.Models.Circle;
-import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.NotificationUtil;
 import com.timothydillan.circles.Utils.SharedPreferencesUtil;
 import com.timothydillan.circles.Utils.UserUtil;
 
-import java.util.ArrayList;
-
-public class JoinCircleActivity extends ActivityInterface {
+public class JoinCircleActivity extends ActivityInterface implements CircleUtil.CircleUtilListener {
     private static final String TAG = "JoinCircleActivity";
+    private UserUtil userUtil = UserUtil.getInstance();
+    private final String notificationMessage = "Hey there! " + userUtil.getCurrentUser().getFirstName() + " joined your circle!";
+    private CircleUtil circleUtil = CircleUtil.getInstance();
     private TextInputLayout circleInput;
-    private static final String notificationTitle = "New member joined!";
-    private static final String notificationMessage = "Hey there! " + UserUtil.getCurrentUser().getFirstName() + " joined your circle!";
-    private CircleUtil circleUtil = new CircleUtil();
-    private UserUtil userUtil = new UserUtil();
     private SharedPreferencesUtil sharedPreferences;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_join_circle);
-
         sharedPreferences = new SharedPreferencesUtil(this);
+
         Toolbar toolbar = findViewById(R.id.joinToolbar);
         setSupportActionBar(toolbar);
         getSupportActionBar().setDisplayHomeAsUpEnabled(true);
@@ -50,51 +37,72 @@ public class JoinCircleActivity extends ActivityInterface {
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        // Register a circle listener to check whether the user successfully joined the circle or not
+        circleUtil.registerListener(this);
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
-        sharedPreferences.writeBoolean(SharedPreferencesUtil.ACTIVITY_APP_KEY, true);
+        // Unregister the circle when the user leaves the join circle activity.
+        circleUtil.unregisterListener(this);
+        // Make sure that the foreground state is set to true, so that the authentication process
+        // runs only when the user completely leaves the app and goes back.
+        sharedPreferences.writeBoolean(SharedPreferencesUtil.FOREGROUND_KEY, true);
     }
 
     @Override
     public boolean onOptionsItemSelected(@NonNull MenuItem item) {
-        if (item.getItemId() == android.R.id.home)
+        if (item.getItemId() == android.R.id.home) {
             finish();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }
         return super.onOptionsItemSelected(item);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     public void onJoinButtonClick(View v) {
 
+        // If the user clicked the join button, get the circle code on the edit text,
         String circleCode = circleInput.getEditText().getText().toString();
 
+        // and check whether the length of the code is 6 (each circle has a 6 digit code)
         if (circleCode.length() != 6) {
+            // if the length isn't 6,
             circleInput.setErrorEnabled(true);
-            circleInput.setError("Error: A code has 6 digits.");
+            // show an error.
+            circleInput.setError(getResources().getString(R.string.circle_code_error));
             circleInput.requestFocus();
+            // and do nothing.
             return;
-        } else {
-            circleInput.setErrorEnabled(false);
         }
-
+        // else, remove the error, and trigger the joinCircle function in the circle utility class.
+        circleInput.setErrorEnabled(false);
         circleUtil.joinCircle(circleCode);
+    }
 
-        circleUtil.addEventListener(new CircleUtil.CircleUtilListener() {
-            @Override
-            public void onCircleReady(ArrayList<User> members) { }
-            @Override
-            public void onCircleChange() { }
-            @Override
-            public void onJoinCircle(boolean success) {
-                if (success) {
-                    userUtil.initializeCurrentCircleTokens();
-                    Log.d(TAG, "Successfully joined the circle.");
-                    showSnackbar("Successfully joined the circle.");
-                    sendJoinNotification();
-                } else {
-                    Log.d(TAG, "Failed to join the circle.");
-                    showSnackbar("Failed to join the circle.");
-                }
-            }
-        });
+
+    @Override
+    public void onJoinCircle(boolean success) {
+        // If the join process is successful,
+        if (success) {
+            // show a snackbar that shows a success message,
+            Log.d(TAG, getResources().getString(R.string.success_join_message));
+            showSnackbar(getResources().getString(R.string.success_join_message));
+            // and send a notification to the new circle that a new user has joined their circle.
+            sendJoinNotification();
+        } else {
+            // else, show a failed message.
+            Log.d(TAG, getResources().getString(R.string.failure_join_message));
+            showSnackbar(getResources().getString(R.string.failure_join_message));
+        }
     }
 
     private void showSnackbar(String message) {
@@ -102,10 +110,14 @@ public class JoinCircleActivity extends ActivityInterface {
     }
 
     private void sendJoinNotification() {
+        // For every user token in the current circle,
         for (String token : UserUtil.getCurrentCircleTokens()) {
-            /*if (token.equals(TOKEN))
-                continue;*/
-            NotificationUtil.sendNotification(notificationTitle, notificationMessage, token);
+            // We don't want to send a notification to the current user that they joined the cirlce, so we'll skip the current user's token
+            if (!token.equals(userUtil.getCurrentUser().getToken())) {
+                // and send a notification to the other members in the circle.
+                NotificationUtil.sendNotification(getResources().getString(R.string.join_notification_title), notificationMessage, token);
+            }
         }
     }
+
 }

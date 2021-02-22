@@ -1,8 +1,6 @@
 package com.timothydillan.circles;
 
-import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import androidx.appcompat.app.AppCompatActivity;
 
 import android.content.Intent;
 import android.os.Bundle;
@@ -16,30 +14,19 @@ import com.google.android.gms.auth.api.signin.GoogleSignInAccount;
 import com.google.android.gms.auth.api.signin.GoogleSignInClient;
 import com.google.android.gms.auth.api.signin.GoogleSignInOptions;
 import com.google.android.gms.common.api.ApiException;
-import com.google.android.gms.tasks.OnCompleteListener;
-import com.google.android.gms.tasks.OnFailureListener;
 import com.google.android.gms.tasks.Task;
 import com.google.android.material.textfield.TextInputLayout;
-import com.google.firebase.auth.AuthCredential;
-import com.google.firebase.auth.AuthResult;
-import com.google.firebase.auth.FirebaseAuth;
-import com.google.firebase.auth.FirebaseUser;
-import com.google.firebase.auth.GoogleAuthProvider;
-import com.google.firebase.database.FirebaseDatabase;
-import com.timothydillan.circles.Models.Circle;
 import com.timothydillan.circles.Models.User;
 import com.timothydillan.circles.UI.ProgressButton;
-import com.timothydillan.circles.Utils.FirebaseUtil;
-
-import org.w3c.dom.Text;
+import com.timothydillan.circles.Utils.UserUtil;
 
 import java.util.HashMap;
-import java.util.Random;
 
-public class SignUpActivity extends ActivityInterface {
+public class SignUpActivity extends ActivityInterface implements UserUtil.UsersListener {
 
     private static final String TAG = "SignUpActivity";
     private static final int GOOGLE_SIGN_IN_CODE = 1;
+
     private TextInputLayout firstNameInput;
     private TextInputLayout lastNameInput;
     private TextInputLayout phoneInput;
@@ -50,11 +37,10 @@ public class SignUpActivity extends ActivityInterface {
     private String phone;
     private String email;
     private String password;
-    private FirebaseAuth firebaseAuth = FirebaseUtil.getFirebaseAuth();
-    private final HashMap<TextInputLayout, String> textInputs = new HashMap<>();
+    private UserUtil userUtil = UserUtil.getInstance();
+    private HashMap<TextInputLayout, String> textInputs = new HashMap<>();
     private View signUpButton;
     private ProgressButton progressButton;
-
     private GoogleSignInClient googleSignInClient;
 
     @Override
@@ -68,19 +54,52 @@ public class SignUpActivity extends ActivityInterface {
         phoneInput = findViewById(R.id.phoneInputLayout);
         emailInput = findViewById(R.id.emailInputLayout);
         passwordInput = findViewById(R.id.passwordInputLayout);
-
         signUpButton = findViewById(R.id.signUpButton);
         progressButton = new ProgressButton("GET STARTED", getResources(), signUpButton, R.color.dark_blue);
-
         GoogleSignInOptions gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DEFAULT_SIGN_IN)
                 .requestIdToken(getString(R.string.default_web_client_id))
                 .requestEmail()
                 .build();
 
+        /* If the user has entered an email and a password from the sign in activity, and redirects here,
+         * get the email and password from the sign up activity and set the email and password fields accordingly.
+         * An extra feature that prevents repetition. */
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String savedEmail = extras.getString("EMAIL_KEY");
+            String savedPassword = extras.getString("PASSWORD_KEY");
+            if (!savedEmail.isEmpty() && !savedPassword.isEmpty()) {
+                emailInput.getEditText().setText(savedEmail);
+                passwordInput.getEditText().setText(savedPassword);
+            } else if (!savedEmail.isEmpty()) {
+                emailInput.getEditText().setText(savedEmail);
+            } else if (!savedPassword.isEmpty()) {
+                passwordInput.getEditText().setText(savedPassword);
+            }
+        }
 
         signUpButton.setOnClickListener(v -> onSignUpButtonClick());
-
         googleSignInClient = GoogleSignIn.getClient(this, gso);
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // We'll register a listener to detect whether the sign up was successful.
+        userUtil.registerListener(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // We'll unregister the listener when the user leaves the activity since it's not needed anymore.
+        userUtil.unregisterListener(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
     public void googleSignIn(View v) {
@@ -89,72 +108,20 @@ public class SignUpActivity extends ActivityInterface {
     }
 
     private void onSignUpButtonClick() {
-
+        // Before registering the user, we'll first check if the user has filled out the fields properly.
         if (!formValidation())
             return;
 
+        // If they did, we'll create a new user for them.
         progressButton.onLoading();
-        firebaseAuth.createUserWithEmailAndPassword(email, password)
-                .addOnCompleteListener(this, task -> {
-                    if (task.isSuccessful()) {
-                        // Sign in success, update UI with the signed-in user's information
-                        Log.d(TAG, "createUserWithEmail:success");
-
-                        FirebaseUtil.initializeCurrentFirebaseUser();
-
-                        // Get the current user
-                        String USER_UID = FirebaseUtil.getCurrentUser().getUid();
-
-                        // Generate a random 6-digit code
-                        int circleCode = new Random().nextInt(999999);
-
-                        // Create new circle with user's uid and him/her being an admin
-                        Circle newCircle = new Circle("Admin");
-
-                        // Create a new user with the current session being on the current circle
-                        User newUser = new User(USER_UID, firstName, lastName, email, phone, circleCode, FirebaseUtil.getFirebaseMessagingToken());
-
-                        FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
-                                .child("name").setValue(firstName + "'s Circle");
-
-                        FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
-                                .child("Members").child(USER_UID).setValue(newCircle);
-
-                        // Add user details to the database
-                        FirebaseDatabase.getInstance().getReference("Users").child(USER_UID)
-                                .setValue(newUser).addOnCompleteListener(new OnCompleteListener<Void>() {
-                            @Override
-                            public void onComplete(@NonNull Task<Void> task) {
-                                if (task.isSuccessful()) {
-                                    Log.d(TAG, "addDataToDatabase:success");
-                                    Toast.makeText(SignUpActivity.this, "Successfully created an account.",
-                                            Toast.LENGTH_SHORT).show();
-                                    progressButton.onFinished();
-                                    new Handler().postDelayed(() -> goToMainActivity(), 1500);
-                                } else {
-                                    Log.w(TAG, "addDataToDatabase:failure", task.getException());
-                                    Toast.makeText(SignUpActivity.this, "Failed creating an account.",
-                                            Toast.LENGTH_SHORT).show();
-                                }
-                            }
-                        })
-                        .addOnFailureListener(new OnFailureListener() {
-                            @Override
-                            public void onFailure(@NonNull Exception e) {
-                                progressButton.onFailed();
-                            }
-                        });
-                    } else {
-                        // If sign in fails, display a message to the user.
-                        progressButton.onFailed();
-                        Log.w(TAG, "createUserWithEmail:failure", task.getException());
-                        Toast.makeText(SignUpActivity.this, "Authentication failed.",
-                                Toast.LENGTH_SHORT).show();
-                    }
-                });
+        User newUser = new User(firstName, lastName, email, phone);
+        userUtil.createAccount(email, password, newUser);
     }
 
     public boolean formValidation() {
+        /* This function validates whether the fields is not empty.
+         * If one of the fields is empty, an error will be shown on the field, and the function will return false.
+         * Likewise, if the fields are OK, the function will return true. */
         firstName = firstNameInput.getEditText().getText().toString();
         lastName = lastNameInput.getEditText().getText().toString();
         phone = phoneInput.getEditText().getText().toString();
@@ -182,6 +149,8 @@ public class SignUpActivity extends ActivityInterface {
     }
 
     public void onSignInClick(View v) {
+        /* When the user wants to sign in, get the email and password fields
+        if it isn't empty and place it in the extras of the intent and start the sign in actvity.*/
         Intent signInActivity = new Intent(SignUpActivity.this, SignInActivity.class);
         String email = emailInput.getEditText().getText().toString();
         String password = passwordInput.getEditText().getText().toString();
@@ -198,6 +167,7 @@ public class SignUpActivity extends ActivityInterface {
         finish();
     }
 
+    // https://firebase.google.com/docs/auth/android/google-signin
     @Override
     protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -208,11 +178,10 @@ public class SignUpActivity extends ActivityInterface {
                     // Google Sign In was successful, authenticate with Firebase
                     GoogleSignInAccount account = task.getResult(ApiException.class);
                     Log.d(TAG, "firebaseAuthWithGoogle:" + account.getId());
-                    firebaseAuthWithGoogle(account.getIdToken());
+                    userUtil.authenticateAccountWithCredentials(account.getIdToken());
                 } catch (ApiException e) {
                     // Google Sign In failed, update UI appropriately
                     Log.w(TAG, "Google sign in failed", e);
-                    // ...
                 }
             } else {
                 Log.e(TAG, task.getException().toString());
@@ -220,59 +189,23 @@ public class SignUpActivity extends ActivityInterface {
         }
     }
 
-    private void firebaseAuthWithGoogle(String idToken) {
-        AuthCredential credential = GoogleAuthProvider.getCredential(idToken, null);
-        firebaseAuth.signInWithCredential(credential)
-                .addOnCompleteListener(this, new OnCompleteListener<AuthResult>() {
-                    @Override
-                    public void onComplete(@NonNull Task<AuthResult> task) {
-                        if (task.isSuccessful()) {
-                            // Sign in success, update UI with the signed-in user's information
-                            Log.d(TAG, "signInWithCredential:success");
-                            FirebaseUtil.initializeCurrentFirebaseUser();
+    @Override
+    public void onAuthenticationSuccessful() {
+        /* When the sign up operation is successful, we'll wait for 1.5 seconds before going to the main activity. */
+        Toast.makeText(SignUpActivity.this, "Successfully created an account.",
+                Toast.LENGTH_SHORT).show();
+        progressButton.onFinished();
+        new Handler().postDelayed(() -> {
+            goToMainActivity();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }, 1500);
+    }
 
-                            // Get the current user
-                            FirebaseUser user = FirebaseUtil.getCurrentUser();
-
-                            // Generate a random 6-digit code
-                            int circleCode = new Random().nextInt(999999);
-
-                            // Create new circle with user's uid and him/her being an admin
-                            Circle newCircle = new Circle("Admin");
-
-                            String[] fullName = user.getDisplayName().split(" ");
-
-                            // Create a new user with the current session being on the current circle
-                            User newUser = new User(user.getUid(), fullName[0], fullName[1], user.getEmail(), circleCode, FirebaseUtil.getFirebaseMessagingToken());
-
-                            FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
-                                    .child("name").setValue(firstName + "'s Circle");
-
-                            FirebaseDatabase.getInstance().getReference("Circles").child(String.valueOf(circleCode))
-                                    .child("Members").child(user.getUid()).setValue(newCircle);
-
-                            // Add user details to the database
-                            FirebaseDatabase.getInstance().getReference("Users").child(user.getUid())
-                                    .setValue(newUser).addOnCompleteListener(new OnCompleteListener<Void>() {
-                                @Override
-                                public void onComplete(@NonNull Task<Void> task) {
-                                    if (task.isSuccessful()) {
-                                        Log.d(TAG, "addDataToDatabase:success");
-                                        Toast.makeText(SignUpActivity.this, "Successfully created an account.",
-                                                Toast.LENGTH_SHORT).show();
-                                        goToMainActivity();
-                                    } else {
-                                        Log.w(TAG, "addDataToDatabase:failure", task.getException());
-                                        Toast.makeText(SignUpActivity.this, "Failed creating an account.",
-                                                Toast.LENGTH_SHORT).show();
-                                    }
-                                }
-                            });
-                        } else {
-                            // If sign in fails, display a message to the user.
-                            Log.w(TAG, "signInWithCredential:failure", task.getException());
-                        }
-                    }
-                });
+    @Override
+    public void onAuthenticationFailed() {
+        /* When the sign up operation fails we'll just show a message */
+        progressButton.onFailed();
+        Toast.makeText(SignUpActivity.this, "Failed to create an account.",
+                Toast.LENGTH_SHORT).show();
     }
 }

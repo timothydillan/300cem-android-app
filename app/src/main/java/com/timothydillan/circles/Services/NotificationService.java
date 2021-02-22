@@ -18,6 +18,7 @@ import com.google.firebase.messaging.FirebaseMessagingService;
 import com.google.firebase.messaging.RemoteMessage;
 import com.timothydillan.circles.MainActivity;
 import com.timothydillan.circles.R;
+import com.timothydillan.circles.Utils.FirebaseUtil;
 import com.timothydillan.circles.Utils.UserUtil;
 
 import java.util.Random;
@@ -42,15 +43,16 @@ public class NotificationService extends FirebaseMessagingService {
     @Override
     public void onMessageReceived(@NonNull RemoteMessage remoteMessage) {
         super.onMessageReceived(remoteMessage);
-        if (remoteMessage.getNotification() != null) {
-            Log.d(TAG, remoteMessage.getNotification().getTitle());
-            Log.d(TAG, remoteMessage.getNotification().getBody());
-        }
-        Intent intent = new Intent(this, MainActivity.class);
+        Log.d(TAG, "Received a message");
+        // When we receive a new message, create a random notification ID,
         int randomNotificationId = new Random().nextInt();
+        // We'll also create an intent to the mainactivity so that the user can go to the mainactivity immediately when they click on the notificatoin
+        Intent intent = new Intent(this, MainActivity.class);
         intent.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
         PendingIntent pendingIntent = PendingIntent.getActivity(this, 0, intent, PendingIntent.FLAG_ONE_SHOT);
         Uri notificationUri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_ALARM);
+        // We'll get the title and the message of the notification received and assign it accordingly to the notification
+        // that will be shown on the user's device.
         Notification notification = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setContentTitle(remoteMessage.getData().get("title"))
                 .setContentText(remoteMessage.getData().get("message"))
@@ -59,13 +61,17 @@ public class NotificationService extends FirebaseMessagingService {
                 .setSound(notificationUri)
                 .build();
         notificationManager.notify(randomNotificationId, notification);
-        Log.d(TAG, "Received a message");
     }
 
     @Override
     public void onNewToken(@NonNull String s) {
+        // When our user's token changes,
         super.onNewToken(s);
-        UserUtil userUtil = new UserUtil();
-        userUtil.updateDbUserToken(s);
+        // check if the current user isn't null (since the service is called even before the application initializes anything)
+        if (FirebaseUtil.getCurrentUser() != null) {
+            // and update the user token on the database.
+            UserUtil userUtil = UserUtil.getInstance();
+            userUtil.updateDbUserToken(s);
+        }
     }
 }

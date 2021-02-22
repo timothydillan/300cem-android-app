@@ -27,6 +27,7 @@ import com.android.volley.VolleyError;
 import com.android.volley.toolbox.ImageLoader;
 import com.google.android.gms.maps.CameraUpdateFactory;
 import com.google.android.gms.maps.GoogleMap;
+import com.google.android.gms.maps.model.BitmapDescriptor;
 import com.google.android.gms.maps.model.BitmapDescriptorFactory;
 import com.google.android.gms.maps.model.CameraPosition;
 import com.google.android.gms.maps.model.LatLng;
@@ -47,16 +48,18 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.Callable;
+import java.util.concurrent.CompletableFuture;
 
 public class LocationUtil {
     private static ImageLoader imageLoader;
     private static final String TAG = "LocationUtil";
     private static final LatLng SINGAPORE_COORDINATES = new LatLng(1.290270, 103.851959);
-    private static final String USER_UID = FirebaseUtil.getCurrentUser().getUid();
+    private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private Context ctx;
+    private String USER_UID = FirebaseUtil.getCurrentUser().getUid();
     private static GoogleMap map = null;
     private static HashMap<User, Marker> membersLocation = new HashMap<>();
-    private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private static CameraPosition lastCameraPosition = null;
     private static Geocoder geocoder;
 
@@ -71,6 +74,7 @@ public class LocationUtil {
     }
 
     public void setMapAppearanceMode() {
+        // https://stackoverflow.com/questions/55787035/is-there-an-api-to-detect-which-theme-the-os-is-using-dark-or-light-or-other
         // If the device is night/dark mode,
         if ((ctx.getResources().getConfiguration().uiMode & Configuration.UI_MODE_NIGHT_MASK) ==
                 Configuration.UI_MODE_NIGHT_YES) {
@@ -85,8 +89,6 @@ public class LocationUtil {
     private void changeMapAppearance(int resourceId) {
         // https://developers.google.com/maps/documentation/android-sdk/styling
         try {
-            // Customise the styling of the base map using a JSON object defined
-            // in a raw resource file.
             boolean success = map.setMapStyle(
                     MapStyleOptions.loadRawResourceStyle(
                             ctx, resourceId));
@@ -101,6 +103,11 @@ public class LocationUtil {
     public void initializeMarkers(ArrayList<User> circleMembers) {
 
         // Clear the membersLocation hash map so that old data does not overlap with new ones.
+        for (Marker marker : membersLocation.values()) {
+            marker.remove();
+        }
+
+        // and clear the hashmap
         membersLocation.clear();
 
         // If we haven't initialized the foreground service,
@@ -112,33 +119,59 @@ public class LocationUtil {
 
         // Then for each member from the retrieved arraylist,
         for (User circleMember : circleMembers) {
-            // Get their location
-            LatLng memberLocation = new LatLng(circleMember.getLatitude(), circleMember.getLongitude());
-            Bitmap imageBitmap = BitmapFactory.decodeResource(ctx.getResources(), R.drawable.logo);
+            // set the marker's title for each user to their name
+            String markerTitle = circleMember.getFirstName() + "'s Location";
 
+            // and by default the marker's avatar/icon would be set to the logo of the app
+            BitmapDescriptor defaultAvatar = BitmapDescriptorFactory.fromBitmap(createUserBitmap(BitmapFactory.decodeResource(ctx.getResources(), R.drawable.logo)));
+
+            // We'll then get their location
+            LatLng memberLocation = new LatLng(circleMember.getLatitude(), circleMember.getLongitude());
+
+            // and add the marker to the map
             Marker memberMarker = map.addMarker(new MarkerOptions()
                     .position(memberLocation)
-                    .title(circleMember.getFirstName() + "'s Location")
-                    .snippet(circleMember.getLastSharingTime())
+                    .title(markerTitle)
+                    .snippet("Get directions to " + markerTitle + "?")
                     .anchor(0.5f, 0.907f)
-                    .icon(BitmapDescriptorFactory.fromBitmap(createUserBitmap(imageBitmap))));
+                    .icon(defaultAvatar));
 
-            // Animate/move the camera to the current user with a zoom of 15
-            if (circleMember.getUid().equals(UserUtil.getCurrentUser().getUid()))
+            // We'll also animate/move the camera to the current user with a zoom of 15
+            if (circleMember.getUid().equals(UserUtil.getInstance().getCurrentUser().getUid()))
                 map.animateCamera(CameraUpdateFactory.newLatLngZoom(memberLocation, 15.0f));
-            // and put it into the hashmap.
+
+            // and put the current member and the marker into the hashmap so that we're able to modify it later.
             membersLocation.put(circleMember, memberMarker);
         }
+
+        // after we're done with adding each marker, we should try and update the avatar of the user to their profile picture.
         updateAvatars();
     }
 
     public void updateAvatars() {
+        // Loop through all the elements inside the hashmap,
         for (Map.Entry<User, Marker> marker : membersLocation.entrySet()) {
+            // if the profile picture URL is empty we should just skip the user.
+            if (marker.getKey().getProfilePicUrl().isEmpty()) {
+                continue;
+            }
+            // Download the image using volley as a bitmap from the user's profile pic url,
             imageLoader.get(marker.getKey().getProfilePicUrl(), new ImageLoader.ImageListener() {
                 @Override
                 public void onResponse(ImageLoader.ImageContainer response, boolean isImmediate) {
+                    // and once we get a response, and if the bitmap isn't null, we'll use the bitmap as the marker's avatar.
+                    // however if the bitmap received is null, we'll still use the logo as the avatar of the marker.
                     Bitmap imageBitmap = response.getBitmap() != null ? response.getBitmap() : BitmapFactory.decodeResource(ctx.getResources(), R.drawable.logo);
-                    marker.getValue().setIcon(BitmapDescriptorFactory.fromBitmap(createUserBitmap(imageBitmap)));
+                    // We'll then convert the bitmap into a bitmapdescriptor
+                    BitmapDescriptor markerIcon = BitmapDescriptorFactory.fromBitmap(createUserBitmap(imageBitmap));
+                    try {
+                        // and apply the bitmapdescriptor onto the marker.
+                        marker.getValue().setIcon(markerIcon);
+                    } catch (IllegalArgumentException e) {
+                        // The IllegalArgumentException may be called if the user has a "bad" internet connection that doesn't really download images fast,
+                        // and they quickly move from the map fragment without waiting for the images to load first.
+                        Log.d(TAG, "Unmanaged descriptor. User may have went to a different fragment when the image has not been fully downloaded.");
+                    }
                 }
                 @Override
                 public void onErrorResponse(VolleyError error) { }
@@ -147,9 +180,6 @@ public class LocationUtil {
     }
 
     public ArrayList<User> getUpdatedInformation(@NonNull DataSnapshot snapshot) {
-        if (membersLocation.isEmpty()) {
-            return null;
-        }
         // Create an array list to store newly updated information
         ArrayList<User> newMemberInformation = new ArrayList<>();
         // For each of the data received,
@@ -159,15 +189,19 @@ public class LocationUtil {
                 // Get their current marker and user details
                 Marker currentMemberMarker = circleMembers.getValue();
                 User currentCircleMember = circleMembers.getKey();
+                // and if the current user being iterated equals to the current circle member being iterated,
                 if (ds.getKey().equals(currentCircleMember.getUid())) {
+                    // get the new information
                     User newMember = ds.getValue(User.class);
-                    if (UserUtil.didUserChange(currentCircleMember, newMember)) {
+                    // and check whether the new information differs from the old information stored.
+                    if (UserUtil.didUserLocationChange(currentCircleMember, newMember)) {
+                        // if it did change, update the current user,
                         UserUtil.updateCurrentUser(currentCircleMember, newMember);
+                        // and set the linked marker to the new position
                         LatLng newPosition = new LatLng(newMember.getLatitude(), newMember.getLongitude());
-                        currentMemberMarker.setSnippet(currentCircleMember.getLastSharingTime());
                         currentMemberMarker.setPosition(newPosition);
                     }
-                    // add the new information to the list.
+                    // and add the new information to the list.
                     newMemberInformation.add(currentCircleMember);
                 }
             }
@@ -176,6 +210,8 @@ public class LocationUtil {
         return newMemberInformation;
     }
 
+    /* Code taken from:
+     * https://github.com/DrKLO/Telegram/blob/3480f19272fbe7679172dc51473e19fcf184501c/TMessagesProj/src/main/java/org/telegram/ui/LocationActivity.java#L1365 */
     private Bitmap createUserBitmap(Bitmap profilePic) {
         Bitmap result = null;
         try {
@@ -185,15 +221,13 @@ public class LocationUtil {
             Drawable drawable = ResourcesCompat.getDrawable(ctx.getResources(), R.drawable.pin, null);
             drawable.setBounds(0, 0, dp(62), dp(76));
             drawable.draw(canvas);
-
             Paint roundPaint = new Paint(Paint.ANTI_ALIAS_FLAG);
             RectF bitmapRect = new RectF();
             canvas.save();
-
             if (profilePic != null) {
                 BitmapShader shader = new BitmapShader(profilePic, Shader.TileMode.CLAMP, Shader.TileMode.CLAMP);
                 Matrix matrix = new Matrix();
-                float scale = dp(52) / (float) profilePic.getWidth();
+                float scale = dp(72) / (float) profilePic.getWidth();
                 matrix.postTranslate(dp(2), dp(2));
                 matrix.postScale(scale, scale);
                 roundPaint.setShader(shader);
@@ -204,14 +238,15 @@ public class LocationUtil {
             canvas.restore();
             try {
                 canvas.setBitmap(null);
-            } catch (Exception e) {}
+            } catch (Exception ignored) {}
 
         } catch (Throwable t) {
             t.printStackTrace();
         }
         return result;
     }
-
+    /* Code taken from:
+     * https://github.com/DrKLO/Telegram/blob/3480f19272fbe7679172dc51473e19fcf184501c/TMessagesProj/src/main/java/org/telegram/messenger/AndroidUtilities.java#L1553 */
     private int dp(float value) {
         if (value == 0) {
             return 0;
@@ -219,7 +254,7 @@ public class LocationUtil {
         return (int) Math.ceil(ctx.getResources().getDisplayMetrics().density * value);
     }
 
-    public static void updateUserLocation(Location location) {
+    public void updateUserLocation(Location location) {
         // Get current date
         SimpleDateFormat dateFormat = new SimpleDateFormat("HH.mm EEEE");
         String currentDateAndTime = dateFormat.format(new Date());
@@ -232,8 +267,15 @@ public class LocationUtil {
     public static void resetMap() {
         // Removes all markers, overlays, and polyline from the map.
         map.clear();
+
+        // Remove all marker references
+        for (Marker markers: membersLocation.values()) {
+            markers.remove();
+        }
+
         // clear the hashmap
         membersLocation.clear();
+
         // clear last camera position
         lastCameraPosition = null;
     }
@@ -250,9 +292,6 @@ public class LocationUtil {
         }
     }
 
-    public HashMap<User, Marker> getMembers() {
-        return membersLocation;
-    }
     public static HashMap<User, Marker> getMember() {
         return membersLocation;
     }
@@ -276,9 +315,10 @@ public class LocationUtil {
                 // leave the location name to Getting user location instead to indicate that
                 // the geocoder can't get the address from the user's latitude and longitude.
                 locationName = new StringBuilder("Getting user location..");
+                Log.d(TAG, "Failed to retrieve user location");
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            Log.d(TAG, "Failed to retrieve user location");
         }
         return locationName.toString();
     }

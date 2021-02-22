@@ -38,4 +38,9 @@
         <item name="android:textAppearanceLarge">@font/dmsans</item>
     </style>
 
+    <style name="SpinnerStyle">
+        <item name="fontFamily">@font/dmsans</item>
+        <item name="android:textStyle">bold</item>
+    </style>
+
 </resources>

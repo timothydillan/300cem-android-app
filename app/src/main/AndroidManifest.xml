@@ -20,11 +20,16 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/Theme.Circles">
-        <activity android:name=".AddPostActivity"></activity>
-        <activity android:name=".SOSConfirmationActivity" />
+        <activity android:name=".CreateCircleActivity"></activity>
+        <activity android:name=".InviteCodeActivity" />
+        <activity
+            android:name=".SOSConfirmationActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".PasswordActivity" />
         <activity android:name=".EditCircleNameActivity" />
-        <activity android:name=".CrashConfirmationActivity" />
+        <activity
+            android:name=".CrashConfirmationActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize" />
         <activity android:name=".EditProfileActivity" />
         <activity android:name=".CircleMembersActivity" />
         <activity android:name=".JoinCircleActivity" />
@@ -49,7 +54,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MainActivity">
+        <activity
+            android:name=".MainActivity"
+            android:configChanges="keyboardHidden|orientation|screenSize">
             <intent-filter>
                 <action android:name="com.timothydillan.circles.MainActivity" />
 
@@ -84,7 +91,10 @@
                 <action android:name="com.google.android.gms.wearable.MESSAGE_RECEIVED" />
                 <action android:name="com.google.android.gms.wearable.CAPABILITY_CHANGED" />
                 <action android:name="com.google.android.gms.wearable.CHANNEL_EVENT" />
-                <data android:scheme="wear" android:host="*" />
+
+                <data
+                    android:host="*"
+                    android:scheme="wear" />
             </intent-filter>
         </service>
     </application>

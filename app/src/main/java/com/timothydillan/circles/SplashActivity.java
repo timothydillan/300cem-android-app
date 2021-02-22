@@ -18,7 +18,9 @@ public class SplashActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_splash);
+        // On the first launch of the app, the DB, Auth, and Storage references will be initialized
         FirebaseUtil.initializeFirebaseDbAuthStorage();
+        // The FirebaseUser will also be initialized so that we can redirect the user to the appropriate activity
         FirebaseUtil.initializeCurrentFirebaseUser();
         final int SPLASH_SCREEN_DURATION = 3000;
 
@@ -36,9 +38,12 @@ public class SplashActivity extends AppCompatActivity {
         // after 3 seconds.
         new Handler().postDelayed(() -> {
             Intent activity = new Intent();
+            // If the user is logged in,
             if (FirebaseUtil.getCurrentUser() != null) {
+                // we'll redirect them to the MainActivity
                 activity.setClass(this, MainActivity.class);
             } else {
+                // else, we'll redirect them to the sign up activity instead.
                 activity.setClass(this, SignUpActivity.class);
             }
             startActivity(activity);

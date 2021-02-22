@@ -4,7 +4,6 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 
-import com.google.android.gms.tasks.OnSuccessListener;
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseUser;
 import com.google.firebase.database.DataSnapshot;
@@ -16,8 +15,8 @@ import com.google.firebase.messaging.FirebaseMessaging;
 import com.google.firebase.storage.FirebaseStorage;
 import com.google.firebase.storage.StorageReference;
 
+// A facade class made to make security authentication easier.
 public class FirebaseUtil {
-
     public static final String FCM_KEY = "AAAAT4PeuDA:APA91bEB-PPv1_vQefd-KOFun5df3HZvzjhSv-cok8NrTLhY--OJW5xS1aFgu0t19Z9m8c-0k1qz2uslz9DylyyuAP4Dp9u32p0agsBuzX37r7Q_tBjMQjkZLywZUYdbPlWUfEtAq3Wm";
     private static StorageReference firebaseStorageReference = null;
     private static DatabaseReference firebaseDatabaseReference = null;
@@ -27,6 +26,7 @@ public class FirebaseUtil {
     private static String currentCircleName = null;
 
     public static void initializeFirebaseDbAuthStorage() {
+        /* Initializes the Database, Auth, and Storage reference, if they're null */
         if (firebaseDatabaseReference != null && firebaseAuth != null && firebaseStorageReference != null) {
             return;
         }
@@ -36,6 +36,7 @@ public class FirebaseUtil {
     }
 
     public static void initializeCurrentFirebaseUser() {
+        /* Initializes the current firebase user if they're null. This function also updates the user's current firebase messaing token, as it changes frequently */
         if (firebaseCurrentUser != null) {
             return;
         }
@@ -50,8 +51,9 @@ public class FirebaseUtil {
     }
 
     public static void initializeCircleName() {
+        /* Initializes the name of the circle that the user is in. */
         firebaseDatabaseReference.child("Circles")
-            .child(String.valueOf(UserUtil.getCurrentUser().getCurrentCircleSession()))
+            .child(String.valueOf(UserUtil.getInstance().getCurrentUser().getCurrentCircleSession()))
             .addListenerForSingleValueEvent(new ValueEventListener() {
                 @Override
                 public void onDataChange(@NonNull DataSnapshot snapshot) {
@@ -62,7 +64,9 @@ public class FirebaseUtil {
             });
     }
 
-    public static String getCurrentCircleName() { return currentCircleName; }
+    public static String getCurrentCircleName() {
+        return currentCircleName;
+    }
 
     public static String getFirebaseMessagingToken() { return firebaseMessagingToken; }
 
@@ -83,6 +87,11 @@ public class FirebaseUtil {
     public static void signOut() {
         firebaseCurrentUser = null;
         firebaseAuth.signOut();
+    }
+
+    public static void deleteAccount() {
+        firebaseCurrentUser.delete();
+        signOut();
     }
 
 }

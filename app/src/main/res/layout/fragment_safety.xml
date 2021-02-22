@@ -11,6 +11,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginStart="30dp"
+        android:layout_marginTop="@dimen/margin_top"
         android:layout_marginEnd="@dimen/margin_right"
         android:orientation="vertical">
 
@@ -89,57 +90,6 @@
             android:layout_height="wrap_content"
             android:layout_marginTop="30dp"
             android:layout_marginEnd="@dimen/margin_right"
-            app:cardBackgroundColor="#0D4DA4"
-            app:cardCornerRadius="8dp">
-
-            <LinearLayout
-                android:layout_width="match_parent"
-                android:layout_height="match_parent"
-                android:orientation="vertical">
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_left"
-                    android:layout_marginTop="@dimen/margin_top"
-                    android:fontFamily="@font/dmsans_medium"
-                    android:text="Get COVID-19 alerts"
-                    android:textColor="@color/white"
-                    android:textSize="24sp" />
-
-                <TextView
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_left"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginEnd="@dimen/margin_right"
-                    android:fontFamily="@font/dmsans"
-                    android:lineSpacingExtra="3dp"
-                    android:text="You and your circle may be in an area that is categorized as a COVID-19 cluster. Get notifications to be cautious."
-                    android:textColor="@color/white"
-                    android:textSize="14sp" />
-
-                <Button
-                    style="?attr/materialButtonOutlinedStyle"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:layout_marginStart="@dimen/margin_left"
-                    android:layout_marginTop="10dp"
-                    android:layout_marginBottom="@dimen/margin_top"
-                    android:fontFamily="@font/dmsans"
-                    android:text="Yes"
-                    android:textAllCaps="false"
-                    android:textColor="@color/white"
-                    app:strokeColor="#95FFFFFF" />
-            </LinearLayout>
-
-        </androidx.cardview.widget.CardView>
-
-        <androidx.cardview.widget.CardView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:layout_marginTop="30dp"
-            android:layout_marginEnd="@dimen/margin_right"
             android:layout_marginBottom="@dimen/margin_top"
             app:cardBackgroundColor="#229653"
             app:cardCornerRadius="8dp">
@@ -177,16 +127,6 @@
                     app:layout_constraintStart_toStartOf="parent"
                     app:layout_constraintTop_toBottomOf="@+id/crashTitleTextView" />
 
-                <ImageView
-                    android:id="@+id/enabledImageView"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
-                    android:layout_marginStart="16dp"
-                    android:layout_marginTop="10dp"
-                    app:layout_constraintStart_toStartOf="parent"
-                    app:layout_constraintTop_toBottomOf="@+id/crashDescriptionTextView"
-                    app:srcCompat="@drawable/animated_done" />
-
                 <Button
                     android:id="@+id/crashDetectButton"
                     style="?attr/materialButtonOutlinedStyle"
@@ -195,7 +135,23 @@
                     android:layout_marginStart="16dp"
                     android:fontFamily="@font/dmsans"
                     android:layout_marginTop="10dp"
-                    android:text="Yes"
+                    android:text="Enable"
+                    android:textAllCaps="false"
+                    android:textColor="@color/white"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toBottomOf="@+id/crashDescriptionTextView"
+                    app:strokeColor="#95FFFFFF" />
+
+                <Button
+                    android:id="@+id/disableCrashDetectButton"
+                    style="?attr/materialButtonOutlinedStyle"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="16dp"
+                    android:fontFamily="@font/dmsans"
+                    android:layout_marginTop="10dp"
+                    android:text="Disable"
                     android:textAllCaps="false"
                     android:textColor="@color/white"
                     app:layout_constraintBottom_toBottomOf="parent"

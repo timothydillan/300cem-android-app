@@ -1,6 +1,5 @@
 package com.timothydillan.circles;
 
-import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.animation.ObjectAnimator;
@@ -20,6 +19,8 @@ import com.timothydillan.circles.Utils.UserUtil;
 
 import java.util.concurrent.TimeUnit;
 
+// Note: An exact copy of Crash Confirmation.
+
 public class SOSConfirmationActivity extends AppCompatActivity {
 
     private SharedPreferencesUtil sharedPreferences;
@@ -31,19 +32,15 @@ public class SOSConfirmationActivity extends AppCompatActivity {
     private TextView timeTextView;
     private CountDownTimer countDownTimer;
     private ObjectAnimator timerBarAnimator;
-    private static final String notificationTitle = "SOS";
-    private static final String notificationMessage = UserUtil.getCurrentUser().getFirstName() + " is in danger! Check them out right now!";
-    private static final int MAX_PROGRESS_VALUE = 500;
+    private static final String notificationMessage = UserUtil.getInstance().getCurrentUser().getFirstName() + " is in danger! Check them out right now!";
+    private static final int MAX_PROGRESS_VALUE = 600;
     private static final long TIMER_DURATION = TimeUnit.SECONDS.toMillis(10);
     private static final long ONE_SECOND = TimeUnit.SECONDS.toMillis(1);
-    private static final String STORED_PROGRESS_VALUE = "STORED_PROGRESS_VALUE_KEY";
-    private static final String STORED_TIMER_DURATION = "STORED_TIMER_DURATION_KEY";
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_s_o_s_confirmation);
-
         sharedPreferences = new SharedPreferencesUtil(this);
 
         userOkView = findViewById(R.id.userOkButton);
@@ -53,44 +50,47 @@ public class SOSConfirmationActivity extends AppCompatActivity {
         timerBar = findViewById(R.id.timerBar);
         timeTextView = findViewById(R.id.timeTextView);
 
-        if (savedInstanceState != null) {
-            startCountdownTimer(savedInstanceState.getLong(STORED_TIMER_DURATION));
-            startTimerBarAnimation(savedInstanceState.getLong(STORED_TIMER_DURATION),
-                    savedInstanceState.getInt(STORED_PROGRESS_VALUE));
-        } else {
-            startCountdownTimer(TIMER_DURATION);
-            startTimerBarAnimation(TIMER_DURATION, 0);
-        }
+        // Once the activity is triggered, a 10 second timer will be started.
+        startCountdownTimer();
+        startTimerBarAnimation();
+
+        // If the user clicked on the OK button,
+        userOkView.setOnClickListener(v -> {
+            // Show a toast message,
+            Toast.makeText(this, "Good to know.", Toast.LENGTH_SHORT).show();
+            // Stop the count down timer,
+            stopCountdownTimer();
+            // and go back to the MainActivity.
+            super.onBackPressed();
+        });
+
+        // If the user clicked on the "I need help" button,
+        userHelpView.setOnClickListener(v -> {
+            // send a notification to all the people in the circle that the user is registered in.
+            sendHelpNotification();
+            // stop the countdown timer
+            stopTimerBarAnimation();
+            stopCountdownTimer();
+            // and show a toast message.
+            Toast.makeText(this, "Alerting other members.", Toast.LENGTH_SHORT).show();
+            userHelpButton.onFinished(R.color.red);
+            new Handler().postDelayed(this::finish, TimeUnit.SECONDS.toMillis(5));
+        });
     }
 
     @Override
     protected void onPause() {
         super.onPause();
-        sharedPreferences.writeBoolean(SharedPreferencesUtil.ACTIVITY_APP_KEY, true);
+        // Make sure that the foreground state is set to true, so that the authentication process
+        // runs only when the user completely leaves the app and goes back.
+        sharedPreferences.writeBoolean(SharedPreferencesUtil.FOREGROUND_KEY, true);
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        // If the user leaves the activity, we should stop the countdown timer.
         stopCountdownTimer();
-    }
-
-    @Override
-    protected void onStart() {
-        super.onStart();
-        userOkView.setOnClickListener(v -> {
-            Toast.makeText(this, "Alright.", Toast.LENGTH_SHORT).show();
-            stopCountdownTimer();
-            super.onBackPressed();
-        });
-        userHelpView.setOnClickListener(v -> {
-            sendHelpNotification();
-            stopTimerBarAnimation();
-            stopCountdownTimer();
-            Toast.makeText(this, "Alerting other members.", Toast.LENGTH_SHORT).show();
-            userHelpButton.onFinished(R.color.red);
-            new Handler().postDelayed(this::finish, TimeUnit.SECONDS.toMillis(5));
-        });
     }
 
 
@@ -100,21 +100,10 @@ public class SOSConfirmationActivity extends AppCompatActivity {
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
     }
 
-    @Override
-    protected void onSaveInstanceState(@NonNull Bundle outState) {
-        super.onSaveInstanceState(outState);
-        long currentTime = Long.parseLong(timeTextView.getText().toString());
-        outState.putInt(STORED_PROGRESS_VALUE, timerBar.getProgress());
-        outState.putLong(STORED_TIMER_DURATION, TimeUnit.SECONDS.toMillis(currentTime));
-    }
-
-    private void startTimerBarAnimation(long duration, int start) {
-        if (duration == 0) {
-            timerBar.setProgress(MAX_PROGRESS_VALUE);
-            return;
-        }
-        timerBarAnimator = ObjectAnimator.ofInt(timerBar, "progress", start, MAX_PROGRESS_VALUE); // see this max value coming back here, we animate towards that value
-        timerBarAnimator.setDuration(duration); // in milliseconds
+    private void startTimerBarAnimation() {
+        // We'll animate the timer bar (aka Progressbar) towards that maximum value in 10 seconds.
+        timerBarAnimator = ObjectAnimator.ofInt(timerBar, "progress", 0, MAX_PROGRESS_VALUE);
+        timerBarAnimator.setDuration(TIMER_DURATION);
         timerBarAnimator.setInterpolator(new DecelerateInterpolator());
         timerBarAnimator.start();
     }
@@ -123,18 +112,18 @@ public class SOSConfirmationActivity extends AppCompatActivity {
         timerBarAnimator.cancel();
     }
 
-    private void startCountdownTimer(long duration) {
-        if (duration == 0) {
-            timeTextView.setText("0");
-            return;
-        }
-        countDownTimer = new CountDownTimer(duration, ONE_SECOND) {
+    private void startCountdownTimer() {
+        // Create a countdown timer that lasts for 10 seconds with a 1 second interval that triggers onTick.
+        countDownTimer = new CountDownTimer(TIMER_DURATION, ONE_SECOND) {
             @Override
             public void onTick(long millisUntilFinished) {
+                // every time the countdown timer ticks, set the time text view to the current seconds.
                 timeTextView.setText(String.valueOf((int) TimeUnit.MILLISECONDS.toSeconds(millisUntilFinished)));
             }
             @Override
             public void onFinish() {
+                // if the user didn't do anything until the countdown timer is done,
+                // send a notification to all the people in the circle that the user is registered in.
                 sendHelpNotification();
                 Toast.makeText(SOSConfirmationActivity.this, "Alerting other members.", Toast.LENGTH_SHORT).show();
                 new Handler().postDelayed(SOSConfirmationActivity.this::finish, TimeUnit.SECONDS.toMillis(5));
@@ -151,10 +140,10 @@ public class SOSConfirmationActivity extends AppCompatActivity {
     }
 
     private void sendHelpNotification() {
+        // For every user token in every circle that the user is in
         for (String token : UserUtil.getAllTokens()) {
-            /*if (token.equals(TOKEN))
-                continue;*/
-            NotificationUtil.sendNotification(notificationTitle, notificationMessage, token);
+            // send a help notification to each of them.
+            NotificationUtil.sendNotification(getResources().getString(R.string.sos_title), notificationMessage, token);
         }
     }
 }

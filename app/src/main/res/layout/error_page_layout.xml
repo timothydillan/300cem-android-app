@@ -41,7 +41,7 @@
         android:gravity="center"
         android:paddingLeft="@dimen/margin_left"
         android:paddingRight="@dimen/margin_right"
-        android:text="Seems like you and your members don't have any wearables paired. Add more members?"
+        android:text="Seems like you and your members don't have any wearables paired for mood detection. Add more members?"
         android:textColor="@color/primary_text"
         android:textSize="18dp"
         app:layout_constraintEnd_toEndOf="parent"

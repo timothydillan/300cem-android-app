@@ -14,7 +14,7 @@ import com.android.volley.toolbox.HurlStack;
 import com.android.volley.toolbox.ImageLoader;
 import com.android.volley.toolbox.Volley;
 
-// https://developer.android.com/training/volley/requestqueue
+// Code taken from: https://developer.android.com/training/volley/requestqueue
 public class VolleyImageRequest {
     private static VolleyImageRequest instance;
     private RequestQueue requestQueue;
@@ -49,8 +49,6 @@ public class VolleyImageRequest {
     public RequestQueue getRequestQueue() {
         if (requestQueue == null) {
             requestQueue = Volley.newRequestQueue(ctx.getApplicationContext());
-        } else {
-            Log.d("VolleyRequest", "NOT NULL!");
         }
         return requestQueue;
     }

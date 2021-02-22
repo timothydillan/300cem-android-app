@@ -10,5 +10,6 @@ abstract class ActivityInterface extends AppCompatActivity {
         Intent activity = new Intent();
         activity.setAction("com.timothydillan.circles.MainActivity");
         startActivity(activity);
+        finish();
     }
 }

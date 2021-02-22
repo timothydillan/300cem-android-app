@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.util.Log;
 import android.view.View;
+import android.widget.Toast;
 
 import com.google.android.material.snackbar.Snackbar;
 import com.google.android.material.textfield.TextInputEditText;
@@ -12,17 +13,15 @@ import com.google.android.material.textfield.TextInputLayout;
 import com.google.firebase.auth.FirebaseAuth;
 import com.timothydillan.circles.UI.ProgressButton;
 import com.timothydillan.circles.Utils.FirebaseUtil;
+import com.timothydillan.circles.Utils.UserUtil;
 
-public class SignInActivity extends ActivityInterface {
+public class SignInActivity extends ActivityInterface implements UserUtil.UsersListener {
 
-    private final String TAG = "FIREBASE_AUTH";
     private TextInputLayout emailLayout;
     private TextInputLayout passwordLayout;
-    private TextInputEditText emailInput;
-    private TextInputEditText passwordInput;
     private String email;
     private String password;
-    private FirebaseAuth firebaseAuth = FirebaseUtil.getFirebaseAuth();
+    private UserUtil userUtil = UserUtil.getInstance();
     private View signInButton;
     private ProgressButton progressButton;
 
@@ -31,67 +30,73 @@ public class SignInActivity extends ActivityInterface {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_sign_in);
 
-        // Assign inputs to corresponding XML ids
+        // Assign inputs to corresponding resource ids
         emailLayout = findViewById(R.id.emailInputLayout);
         passwordLayout = findViewById(R.id.passwordInputLayout);
+        signInButton = findViewById(R.id.signInButton);
+        progressButton = new ProgressButton("SIGN IN", getResources(), signInButton, R.color.dark_blue);
 
-        emailInput = findViewById(R.id.emailInput);
-        passwordInput = findViewById(R.id.passwordInput);
-
-        if (savedInstanceState == null) {
-            String savedEmail;
-            String savedPassword;
-            Bundle extras = getIntent().getExtras();
-            savedEmail = extras.getString("EMAIL_KEY");
-            savedPassword = extras.getString("PASSWORD_KEY");
+        /* If the user has entered an email and a password from the sign up activity, and redirects here,
+        * get the email and password from the sign up activity and set the email and password fields accordingly.
+        * An extra feature that prevents repetition. */
+        Bundle extras = getIntent().getExtras();
+        if (extras != null) {
+            String savedEmail = extras.getString("EMAIL_KEY");
+            String savedPassword = extras.getString("PASSWORD_KEY");
             if (!savedEmail.isEmpty() && !savedPassword.isEmpty()) {
-                emailInput.setText(savedEmail);
-                passwordInput.setText(savedPassword);
+                emailLayout.getEditText().setText(savedEmail);
+                passwordLayout.getEditText().setText(savedPassword);
             } else if (!savedEmail.isEmpty()) {
-                emailInput.setText(savedEmail);
+                emailLayout.getEditText().setText(savedEmail);
             } else if (!savedPassword.isEmpty()) {
-                passwordInput.setText(savedPassword);
+                passwordLayout.getEditText().setText(savedPassword);
             }
         }
-
-        signInButton = findViewById(R.id.signInButton);
-        progressButton = new ProgressButton("Sign In", getResources(), signInButton, R.color.dark_blue);
 
         signInButton.setOnClickListener(v -> signIn());
     }
 
+    @Override
+    protected void onResume() {
+        super.onResume();
+        // We'll register a listener to detect whether the sign in was successful.
+        userUtil.registerListener(this);
+    }
+
+    @Override
+    protected void onPause() {
+        super.onPause();
+        // We'll unregister the listener when the user leaves the activity since it's not needed anymore.
+        userUtil.unregisterListener(this);
+    }
+
+    @Override
+    public void onBackPressed() {
+        super.onBackPressed();
+        overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+    }
+
     public void signIn() {
+        // Before signing the user in, we'll first check if the user has filled out the fields properly.
         if (!formValidation())
             return;
 
+        // If they did, we'll sign in the user.
         progressButton.onLoading();
-
-        firebaseAuth.signInWithEmailAndPassword(email, password)
-            .addOnFailureListener(this, e -> progressButton.onFailed())
-            .addOnCompleteListener(this, task -> {
-                if (task.isSuccessful()) {
-                    // Sign in success
-                    Log.d(TAG, "signInWithEmail:success");
-                    progressButton.onFinished();
-                    new Handler().postDelayed(() -> goToMainActivity(), 1500);
-                } else {
-                    // If sign in fails
-                    Log.w(TAG, "signInWithEmail:failure", task.getException());
-                    Snackbar.make(findViewById(android.R.id.content), "Your password or e-mail may be invalid.", Snackbar.LENGTH_LONG).show();
-                    progressButton.onFailed();
-                }
-            });
-
+        userUtil.signIn(email, password);
     }
 
     public boolean formValidation() {
+        /* This function validates whether the fields is not empty.
+        * If one of the fields is empty, an error will be shown on the field, and the function will return false.
+        * Likewise, if the fields are OK, the function will return true. */
         email = emailLayout.getEditText().getText().toString();
         password = passwordLayout.getEditText().getText().toString();
 
         if (email.isEmpty()) {
             emailLayout.setErrorEnabled(true);
-            emailInput.setError("Your email address shouldn't be empty.");
-            emailInput.requestFocus();
+            emailLayout.setError("Your email address shouldn't be empty.");
+            emailLayout.requestFocus();
             return false;
         } else {
             emailLayout.setErrorEnabled(false);
@@ -111,10 +116,42 @@ public class SignInActivity extends ActivityInterface {
     }
 
     public void onSignUpClick(View v) {
-        Intent signUpActivity = new Intent(SignInActivity.this, SignUpActivity.class);
-        startActivity(signUpActivity);
+        /* When the user wants to sign up instead, get the email and password fields
+        if it isn't empty and place it in the extras of the intent and start the sign up actvity.*/
+        Intent signUpIntent = new Intent(SignInActivity.this, SignUpActivity.class);
+        String email = emailLayout.getEditText().getText().toString();
+        String password = passwordLayout.getEditText().getText().toString();
+        if (!email.isEmpty() && !password.isEmpty()) {
+            signUpIntent.putExtra("EMAIL_KEY", email);
+            signUpIntent.putExtra("PASSWORD_KEY", password);
+        } else if (!email.isEmpty()) {
+            signUpIntent.putExtra("EMAIL_KEY", email);
+        } else if (!password.isEmpty()) {
+            signUpIntent.putExtra("PASSWORD_KEY", password);
+        }
+        startActivity(signUpIntent);
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
         finish();
+    }
+
+    @Override
+    public void onAuthenticationSuccessful() {
+        /* When the user successfully authenticated themselves, we'll wait for 1.5 seconds before going to the main activity. */
+        Toast.makeText(this, "Successfully signed in.",
+                Toast.LENGTH_SHORT).show();
+        progressButton.onFinished();
+        new Handler().postDelayed(() -> {
+            goToMainActivity();
+            overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+        }, 1500);
+    }
+
+    @Override
+    public void onAuthenticationFailed() {
+        /* When the user successfully fails to authenticate themselves, we'll just show a message */
+        progressButton.onFailed();
+        Toast.makeText(this, "Your password or e-mail may be invalid.",
+                Toast.LENGTH_SHORT).show();
     }
 
 }

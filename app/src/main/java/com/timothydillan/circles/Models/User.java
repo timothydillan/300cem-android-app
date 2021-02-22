@@ -1,18 +1,15 @@
 package com.timothydillan.circles.Models;
 
-import com.timothydillan.circles.Utils.HealthUtil;
-
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.HashMap;
-import java.util.Map;
 
 public class User {
+
     public String firstName;
     public String lastName;
     public String email;
     public String phone = "";
-    public String gender = "";
     public String birthDate = "";
     public String profilePicUrl = "";
     public String token;
@@ -22,10 +19,23 @@ public class User {
     public String lastSharingTime;
     public String uid;
     public String heartRate;
+    public String type = "Normal";
+    public String mood;
+    public int myCircle;
     public HashMap<String, String> stepCount;
+    public HashMap<String, String> cyclingActivity;
+    public HashMap<String, String> runningActivity;
+    public HashMap<String, String> walkActivity;
 
     public User() {
 
+    }
+
+    public User(String firstName, String lastName, String email, String phone) {
+        this.firstName = firstName;
+        this.lastName = lastName;
+        this.email = email;
+        this.phone = phone;
     }
 
     public User(String uid, String firstName, String lastName, String email, String phone, int currentCircleSession, String token) {
@@ -35,18 +45,69 @@ public class User {
         this.email = email;
         this.phone = phone;
         this.currentCircleSession = currentCircleSession;
+        myCircle = currentCircleSession;
         this.lastSharingTime = getCurrentDayAndTime();
         this.token = token;
     }
 
-    public User(String uid, String firstName, String lastName, String email, int currentCircleSession, String token) {
+    public void setUid(String uid) {
         this.uid = uid;
-        this.firstName = firstName;
-        this.lastName = lastName;
-        this.email = email;
-        this.currentCircleSession = currentCircleSession;
-        this.lastSharingTime = getCurrentDayAndTime();
+    }
+
+    public void setMyCircle(int myCircle) {
+        this.myCircle = myCircle;
+    }
+
+    public String getType() {
+        return type;
+    }
+
+    public String getToken() {
+        return type;
+    }
+
+    public void setToken(String token) {
         this.token = token;
+    }
+
+    public void setType(String type) {
+        this.type = type;
+    }
+
+    public String getMood() {
+        return mood;
+    }
+
+    public void setMood(String mood) {
+        this.mood = mood;
+    }
+
+    public int getMyCircle() {
+        return myCircle;
+    }
+
+    public HashMap<String, String> getCyclingActivity() {
+        return cyclingActivity;
+    }
+
+    public void setCyclingActivity(HashMap<String, String> cyclingActivity) {
+        this.cyclingActivity = cyclingActivity;
+    }
+
+    public HashMap<String, String> getRunningActivity() {
+        return runningActivity;
+    }
+
+    public void setRunningActivity(HashMap<String, String> runningActivity) {
+        this.runningActivity = runningActivity;
+    }
+
+    public HashMap<String, String> getWalkActivity() {
+        return walkActivity;
+    }
+
+    public void setWalkActivity(HashMap<String, String> walkActivity) {
+        this.walkActivity = walkActivity;
     }
 
     public String getHeartRate() {
@@ -65,22 +126,12 @@ public class User {
         this.stepCount = stepCount;
     }
 
-    public void setSteps(String newStepCount) {
-        HashMap<String, String> step = new HashMap<>();
-        step.put(HealthUtil.getDate(new Date()), String.valueOf(newStepCount));
-        this.stepCount = step;
-    }
-
     public String getLastName() {
         return lastName;
     }
 
     public String getUid() {
         return uid;
-    }
-
-    public String getGender() {
-        return gender;
     }
 
     public String getBirthDate() {
@@ -152,10 +203,6 @@ public class User {
 
     public void setProfilePicUrl(String profilePicUrl) {
         this.profilePicUrl = profilePicUrl;
-    }
-
-    public void setGender(String gender) {
-        this.gender = gender;
     }
 
     public void setBirthDate(String birthDate) {

@@ -1,20 +1,19 @@
 <?xml version="1.0" encoding="utf-8"?>
 <com.google.android.material.card.MaterialCardView
+    android:id="@+id/parentLayout"
     xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="wrap_content"
-    android:layout_marginBottom="16dp"
     app:layout_constraintBottom_toBottomOf="parent"
     app:layout_constraintStart_toStartOf="parent"
     app:layout_constraintTop_toTopOf="parent"
     app:cardElevation="8dp"
     app:strokeWidth="2dp"
-    android:clickable="true"
-    android:focusable="true"
     app:strokeColor="@color/logo_color_green"
     app:cardBackgroundColor="@color/card_color"
+    android:layout_marginBottom="@dimen/margin_top"
     app:cardCornerRadius="8dp">
 
     <androidx.constraintlayout.widget.ConstraintLayout
@@ -62,69 +61,125 @@
         </com.google.android.material.card.MaterialCardView>
 
         <LinearLayout
-            android:id="@+id/heartRateLayout"
             android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
+            android:layout_height="match_parent"
             android:layout_marginStart="16dp"
-            android:paddingRight="16dp"
             android:layout_marginTop="6dp"
             app:layout_constraintStart_toEndOf="@+id/memberImage"
-            app:layout_constraintTop_toBottomOf="@+id/memberName"
-            android:orientation="horizontal">
-            <TextView
-                android:id="@+id/heartEmoji"
+            app:layout_constraintTop_toBottomOf="@+id/memberName">
+
+            <LinearLayout
+                android:id="@+id/heartRateLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/dmsans"
-                android:textSize="13sp"
-                android:ellipsize="end"
-                android:text=" ❤️"
-                android:maxLines="1"
-                android:textColor="@color/primary_text" />
-            <TextView
-                android:id="@+id/heartRateTextView"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:id="@+id/heartEmoji"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/dmsans"
+                    android:text=" ❤️"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/heartRateTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/dmsans"
+                    android:text="58 bpm"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/stepCountLayout"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:fontFamily="@font/dmsans"
-                android:textSize="13sp"
-                android:ellipsize="end"
-                android:layout_marginStart="3dp"
-                android:text="Loading heart rate..."
-                android:maxLines="1"
-                android:textColor="@color/primary_text" />
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:ellipsize="end"
+                    android:fontFamily="@font/dmsans"
+                    android:maxLines="1"
+                    android:text=" 👣‍"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/stepCountTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/dmsans"
+                    android:text="3000 steps"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/runningLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/dmsans"
+                    android:text=" 🏃‍"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/runningTimeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/dmsans"
+                    android:text="16 hr"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/walkingLayout"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:layout_marginTop="6dp"
+                android:orientation="vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_gravity="center"
+                    android:fontFamily="@font/dmsans"
+                    android:text=" 🚴‍"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+
+                <TextView
+                    android:id="@+id/cyclingTimeTextView"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/dmsans"
+                    android:text="16 min"
+                    android:textColor="@color/primary_text"
+                    android:textSize="13sp" />
+            </LinearLayout>
         </LinearLayout>
 
-        <LinearLayout
-            android:id="@+id/stepCountLayout"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginStart="16dp"
-            android:paddingRight="16dp"
-            android:layout_marginTop="6dp"
-            app:layout_constraintStart_toEndOf="@+id/memberImage"
-            app:layout_constraintTop_toBottomOf="@+id/heartRateLayout"
-            android:orientation="horizontal">
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/dmsans"
-                android:textSize="13sp"
-                android:ellipsize="end"
-                android:text=" 🏃‍"
-                android:maxLines="1"
-                android:textColor="@color/primary_text" />
-            <TextView
-                android:id="@+id/stepCountTextView"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:fontFamily="@font/dmsans"
-                android:textSize="13sp"
-                android:ellipsize="end"
-                android:layout_marginStart="3dp"
-                android:text="Loading step count..."
-                android:maxLines="1"
-                android:textColor="@color/primary_text" />
-        </LinearLayout>
+
     </androidx.constraintlayout.widget.ConstraintLayout>
 
 </com.google.android.material.card.MaterialCardView>

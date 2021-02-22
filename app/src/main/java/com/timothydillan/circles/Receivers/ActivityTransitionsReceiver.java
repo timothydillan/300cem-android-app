@@ -10,8 +10,9 @@ import com.timothydillan.circles.BuildConfig;
 
 //https://developer.android.com/codelabs/activity-recognition-transition#0
 public class ActivityTransitionsReceiver extends BroadcastReceiver {
-    public static final String TRANSITIONS_RECEIVER_ACTION =
-            BuildConfig.APPLICATION_ID + "TRANSITIONS_RECEIVER_ACTION";
+    // This class is a BroadcastReceiver class that listens to activity changes.
+
+    public static final String TRANSITIONS_RECEIVER_ACTION = "TRANSITIONS_RECEIVER_ACTION";
     private static final String TAG = "TransitionsReceiver";
     private ActivityChangeListener activityChangeListener;
 
@@ -23,6 +24,7 @@ public class ActivityTransitionsReceiver extends BroadcastReceiver {
 
     @Override
     public void onReceive(Context context, Intent intent) {
+        // When we receive an activity change,
 
         Log.d(TAG, "onReceive(): " + intent);
 
@@ -30,9 +32,12 @@ public class ActivityTransitionsReceiver extends BroadcastReceiver {
             return;
         }
 
+        // and if the intent received contains an activitytransitionresult
         if (ActivityTransitionResult.hasResult(intent)) {
             ActivityTransitionResult result = ActivityTransitionResult.extractResult(intent);
+            // We'll get the result, and if it's not null,
             if (activityChangeListener != null) {
+                // we'll trigger the onActivityChange() event, and pass in the result.
                 activityChangeListener.onActivityChange(result);
             }
         }
