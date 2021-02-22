@@ -26,7 +26,7 @@ public class CircleUtil {
 
     private UserUtil userUtil = UserUtil.getInstance();
     private String currentCircleCode = String.valueOf(userUtil.getCurrentUser().getCurrentCircleSession());
-    private String USER_UID = FirebaseUtil.getCurrentUser().getUid();
+    private String USER_UID = FirebaseUtil.getUid();
     private ArrayList<CircleUtilListener> listeners = new ArrayList<>();
 
     private long THREE_SECONDS = TimeUnit.SECONDS.toMillis(3);

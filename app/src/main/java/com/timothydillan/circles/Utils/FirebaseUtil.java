@@ -74,6 +74,13 @@ public class FirebaseUtil {
         return firebaseDatabaseReference;
     }
 
+    public static String getUid() {
+        if (firebaseCurrentUser == null) {
+            return null;
+        }
+        return firebaseCurrentUser.getUid();
+    }
+
     public static FirebaseUser getCurrentUser() {
         return firebaseCurrentUser;
     }

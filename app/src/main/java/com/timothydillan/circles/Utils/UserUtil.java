@@ -42,7 +42,7 @@ public class UserUtil {
     private static Item registeredCircles = new Item();
     private static String currentRole = null;
     private static User currentUser = null;
-    private String USER_UID = FirebaseUtil.getCurrentUser().getUid();
+    private String USER_UID = FirebaseUtil.getUid();
 
     // Since most of the fragments and activities will have different implementation when one of the listener's event is triggered,
     // we'll just create a list of listeners, and the singleton class loop through all the current listeners and trigger the events.
@@ -433,7 +433,7 @@ public class UserUtil {
                 FirebaseUtil.initializeCurrentFirebaseUser();
 
                 // Get the current user
-                String USER_UID = FirebaseUtil.getCurrentUser().getUid();
+                String USER_UID = FirebaseUtil.getUid();
 
                 // Generate a random 6-digit code
                 int circleCode = new Random().nextInt(999999);

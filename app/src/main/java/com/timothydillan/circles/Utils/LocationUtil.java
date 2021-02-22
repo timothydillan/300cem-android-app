@@ -57,7 +57,7 @@ public class LocationUtil {
     private static final LatLng SINGAPORE_COORDINATES = new LatLng(1.290270, 103.851959);
     private static final DatabaseReference databaseReference = FirebaseUtil.getDbReference();
     private Context ctx;
-    private String USER_UID = FirebaseUtil.getCurrentUser().getUid();
+    private String USER_UID = FirebaseUtil.getUid();
     private static GoogleMap map = null;
     private static HashMap<User, Marker> membersLocation = new HashMap<>();
     private static CameraPosition lastCameraPosition = null;
