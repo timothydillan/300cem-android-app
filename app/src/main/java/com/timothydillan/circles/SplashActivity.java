@@ -26,10 +26,13 @@ public class SplashActivity extends AppCompatActivity {
 
         TextView appTitleTextView = findViewById(R.id.appNameLabel);
         ImageView logoImageView = findViewById(R.id.logoImage);
+        // We'll first set the alpha/visibility of the logo image in the splash screen to 0,
         logoImageView.setAlpha(0f);
         Animation slideInAnimation = AnimationUtils.loadAnimation(this, android.R.anim.slide_in_left);
         slideInAnimation.setDuration(2000);
+        // and then we'll slowly reveal it using a fade in animation
         logoImageView.animate().alpha(1f).setDuration(2000);
+        // while also moving the title text view from the left side of the device to the center of the device.
         appTitleTextView.startAnimation(slideInAnimation);
 
         // postDelayed(Runnable r, Object token, long delayMillis)
