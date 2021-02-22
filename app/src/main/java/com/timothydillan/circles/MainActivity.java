@@ -42,9 +42,9 @@ public class MainActivity extends AppCompatActivity implements UserUtil.UsersLis
     }
 
     @Override
-    protected void onDestroy() {
-        super.onDestroy();
-        /* when the activity reaches the onDestroy cycle, we can safely assume that the user has left
+    protected void onPause() {
+        super.onPause();
+        /* when the activity reaches the onPause cycle, we can safely assume that the user has left
         * the app completely, so we should set the wasAppInForeground boolean to false so that
         * the next time the user launches the app, the user would have to go through authentication. */
         sharedPreferences.writeBoolean(SharedPreferencesUtil.FOREGROUND_KEY, false);

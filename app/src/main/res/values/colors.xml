@@ -26,5 +26,5 @@
     <color name="chip_bg_color">#2F69DF</color>
     <color name="chip_border_color">#CAC9C9</color>
     <color name="chip_text_color">#FFFFFFFF</color>
-    <color name="chip_icon_color">#2F69DF</color>
+    <color name="chip_icon_color">#FFFFFFFF</color>
 </resources>

@@ -134,9 +134,15 @@ public class PermissionUtil {
     }
 
     public void locationPermissions(Activity activity) {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-            showPermissionsDialog(Manifest.permission.ACCESS_BACKGROUND_LOCATION, 0);
-        } else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
+        if (isDeviceQOrLater) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+                showPermissionsDialog(Manifest.permission.ACCESS_BACKGROUND_LOCATION, 0);
+            } else {
+                requestLocationPermissions();
+            }
+        }
+
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_FINE_LOCATION)) {
             showPermissionsDialog(Manifest.permission.ACCESS_FINE_LOCATION, 0);
         } else {
             requestLocationPermissions();
@@ -144,10 +150,15 @@ public class PermissionUtil {
     }
 
     public void fitPermissions(Activity activity) {
-        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
+        if (isDeviceQOrLater) {
+            if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACTIVITY_RECOGNITION)) {
+                showPermissionsDialog(Manifest.permission.ACTIVITY_RECOGNITION, 1);
+            } else {
+                requestFitPermissions();
+            }
+        }
+        if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.BODY_SENSORS)) {
             showPermissionsDialog(Manifest.permission.BODY_SENSORS, 1);
-        } else if (ActivityCompat.shouldShowRequestPermissionRationale(activity, Manifest.permission.ACTIVITY_RECOGNITION)) {
-            showPermissionsDialog(Manifest.permission.ACTIVITY_RECOGNITION, 1);
         } else {
             requestFitPermissions();
         }
