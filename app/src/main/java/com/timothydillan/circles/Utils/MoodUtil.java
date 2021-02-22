@@ -174,9 +174,12 @@ public class MoodUtil {
         return new String(Character.toChars(unicode));
     }
 
-    public ArrayList<User> getMemberMoodInformation(@NonNull DataSnapshot snapshot) {
+    public ArrayList<User> getMemberMoodInformation(DataSnapshot snapshot) {
         // Create an array list to store newly updated information
         ArrayList<User> newMemberInformation = new ArrayList<>();
+        if (snapshot == null) {
+            return newMemberInformation;
+        }
         // For every users in the database
         for (DataSnapshot ds : snapshot.getChildren()) {
             // and for every member in the user's current circle,
@@ -202,6 +205,28 @@ public class MoodUtil {
                 }
             }
         }
+        // and return the new updated information.
+        return newMemberInformation;
+    }
+
+    public ArrayList<User> getMemberMoodInformation() {
+        // Create an array list to store newly updated information
+        ArrayList<User> newMemberInformation = new ArrayList<>();
+
+        // and for every member in the user's current circle,
+        for (User circleMembers : CircleUtil.getInstance().getCircleMembers()) {
+            // check if the current user being iterated has the same uid to the current circle member being iterated
+
+            // if the user currently being iterated about the user does not contain any heart rate data and mood data
+            if (circleMembers.getHeartRate() == null && circleMembers.getMood() == null) {
+                // do nothing and continue to the next iteration
+                continue;
+            }
+
+            // add the users that have those data info to the list
+            newMemberInformation.add(circleMembers);
+        }
+
         // and return the new updated information.
         return newMemberInformation;
     }
