@@ -302,11 +302,25 @@ public class UserUtil {
                 || !currentUser.getType().equals(newUser.getType());
     }
 
+    public static boolean didUserProfileChange(User oldUser, User newUser) {
+        /* This function checks whether the profile of the current user does not match the profile of the new user information
+         *  Returns true if something changed, and it returns false if nothing changed. */
+        return !oldUser.getFirstName().equals(newUser.getFirstName())
+                || !oldUser.getLastName().equals(newUser.getLastName())
+                || !oldUser.getBirthDate().equals(newUser.getBirthDate())
+                || !oldUser.getEmail().equals(newUser.getEmail())
+                || !oldUser.getPhone().equals(newUser.getPhone())
+                || !oldUser.getProfilePicUrl().equals(newUser.getProfilePicUrl())
+                || !oldUser.getType().equals(newUser.getType());
+    }
+
 
     public static boolean didUserLocationChange(User oldUser, User newUser) {
         /* This function checks whether the location information of the current user does not match the location info of the new user
          *  Returns true if something changed, and it returns false if nothing changed. */
-        return oldUser.getLatitude() != newUser.getLatitude()
+        // EDIT: Adding didUserProfileChange since we also need to update their info when their profile data changes. Applies to the functions below.
+        return didUserProfileChange(oldUser, newUser)
+                || oldUser.getLatitude() != newUser.getLatitude()
                 || oldUser.getLongitude() != newUser.getLongitude()
                 || oldUser.getCurrentCircleSession() != newUser.getCurrentCircleSession()
                 || !oldUser.getToken().equals(newUser.getToken());
@@ -315,7 +329,8 @@ public class UserUtil {
     public static boolean didUserHealthChange(User oldUser, User newUser) {
         /* This function checks whether the health information of the current user does not match the health info of the new user
          *  Returns true if something changed, and it returns false if nothing changed. */
-        return oldUser.getHeartRate() != null
+        return didUserProfileChange(oldUser, newUser)
+                || oldUser.getHeartRate() != null
                 && newUser.getHeartRate() != null && !oldUser.getHeartRate().equals(newUser.getHeartRate())
                 || (oldUser.getStepCount() != null && newUser.getStepCount() != null
                 && !oldUser.getStepCount().equals(newUser.getStepCount()))
@@ -335,7 +350,8 @@ public class UserUtil {
     public static boolean didUserMoodChange(User oldUser, User newUser) {
         /* This function checks whether the health information of the current user does not match the health info of the new user
          *  Returns true if something changed, and it returns false if nothing changed. */
-        return oldUser.getHeartRate() != null
+        return didUserProfileChange(oldUser, newUser)
+                || oldUser.getHeartRate() != null
                 && newUser.getHeartRate() != null && !oldUser.getHeartRate().equals(newUser.getHeartRate())
                 || (oldUser.getMood() != null && newUser.getMood() != null
                 && !oldUser.getMood().equals(newUser.getMood()))
