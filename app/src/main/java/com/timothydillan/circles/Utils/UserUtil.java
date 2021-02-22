@@ -352,6 +352,7 @@ public class UserUtil {
         return didUserProfileChange(oldUser, newUser)
                 || (newUser.getHeartRate() != null
                 && !newUser.getHeartRate().equals(oldUser.getHeartRate()))
+                || (newUser.getMood() != null && !newUser.getMood().equals(oldUser.getMood()))
                 || !oldUser.getToken().equals(newUser.getToken())
                 || !oldUser.getType().equals(newUser.getType());
     }
