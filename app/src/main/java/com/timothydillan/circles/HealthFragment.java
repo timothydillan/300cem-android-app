@@ -72,10 +72,6 @@ public class HealthFragment extends Fragment implements UserUtil.UsersListener, 
                 Intent intent = new Intent(requireContext(), WearableService.class);
                 ContextCompat.startForegroundService(requireContext(), intent);
             }
-        } else {
-            // if the user hasn't granted permissions, set the healthmode to 2 (means that permissions are not given.).
-            healthMode = 2;
-            view = inflater.inflate(R.layout.error_page_layout, container, false);
         }
         return view;
     }
@@ -118,10 +114,6 @@ public class HealthFragment extends Fragment implements UserUtil.UsersListener, 
             case 1:
                 // Set the recycler view adapter to the circle health adapter.
                 circleMemberHealthView.setAdapter(memberHealthAdapter);
-                break;
-            // If no permissions have been given
-            case 2:
-                // add member button
                 break;
         }
 

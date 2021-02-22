@@ -77,6 +77,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
     @Override
     public void onViewCreated(@NonNull View view, @Nullable Bundle savedInstanceState) {
         super.onViewCreated(view, savedInstanceState);
+
         if (!isWatchPaired) {
             return;
         }
