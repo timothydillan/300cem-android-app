@@ -330,18 +330,17 @@ public class UserUtil {
         /* This function checks whether the health information of the current user does not match the health info of the new user
          *  Returns true if something changed, and it returns false if nothing changed. */
         return didUserProfileChange(oldUser, newUser)
-                || oldUser.getHeartRate() != null
-                && newUser.getHeartRate() != null && !oldUser.getHeartRate().equals(newUser.getHeartRate())
-                || (oldUser.getStepCount() != null && newUser.getStepCount() != null
-                && !oldUser.getStepCount().equals(newUser.getStepCount()))
-                || (oldUser.getCyclingActivity() != null && newUser.getCyclingActivity() != null
-                && !oldUser.getCyclingActivity().equals(newUser.getCyclingActivity()))
-                || (oldUser.getRunningActivity() != null && newUser.getRunningActivity() != null
-                && !oldUser.getRunningActivity().equals(newUser.getRunningActivity()))
-                || (oldUser.getWalkActivity() != null && newUser.getWalkActivity() != null
-                && !oldUser.getWalkActivity().equals(newUser.getWalkActivity()))
-                || (oldUser.getMood() != null && newUser.getMood() != null
-                && !oldUser.getMood().equals(newUser.getMood()))
+                || (newUser.getHeartRate() != null && !newUser.getHeartRate().equals(oldUser.getHeartRate()))
+                || (newUser.getStepCount() != null
+                && !newUser.getStepCount().equals(oldUser.getStepCount()))
+                || (newUser.getCyclingActivity() != null
+                && !newUser.getCyclingActivity().equals(oldUser.getCyclingActivity()))
+                || (newUser.getRunningActivity() != null
+                && !newUser.getRunningActivity().equals(oldUser.getRunningActivity()))
+                || (newUser.getWalkActivity() != null
+                && !newUser.getWalkActivity().equals(oldUser.getWalkActivity()))
+                || (newUser.getMood() != null
+                && !newUser.getMood().equals(oldUser.getMood()))
                 || !oldUser.getToken().equals(newUser.getToken())
                 || !oldUser.getType().equals(newUser.getType());
     }
@@ -351,10 +350,10 @@ public class UserUtil {
         /* This function checks whether the health information of the current user does not match the health info of the new user
          *  Returns true if something changed, and it returns false if nothing changed. */
         return didUserProfileChange(oldUser, newUser)
-                || oldUser.getHeartRate() != null
-                && newUser.getHeartRate() != null && !oldUser.getHeartRate().equals(newUser.getHeartRate())
-                || (oldUser.getMood() != null && newUser.getMood() != null
-                && !oldUser.getMood().equals(newUser.getMood()))
+                || (newUser.getHeartRate() != null
+                && !newUser.getHeartRate().equals(oldUser.getHeartRate()))
+                || (newUser.getMood() != null
+                && !newUser.getMood().equals(oldUser.getMood()))
                 || !oldUser.getToken().equals(newUser.getToken())
                 || !oldUser.getType().equals(newUser.getType());
     }
