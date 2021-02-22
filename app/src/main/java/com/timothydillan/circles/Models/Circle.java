@@ -5,4 +5,8 @@ public class Circle {
     public Circle(String memberRole) {
         this.memberRole = memberRole;
     }
+
+    public String getMemberRole() {
+        return memberRole;
+    }
 }
