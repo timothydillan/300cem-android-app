@@ -144,6 +144,28 @@ public class CircleUtil {
 
     private void addCircleChangeListener() {
         Log.d(TAG, "Update circle function called. Listening for events..");
+        databaseReference.child("Users").child(USER_UID).child("currentCircleSession").addValueEventListener(new ValueEventListener() {
+            @Override
+            public void onDataChange(@NonNull DataSnapshot snapshot) {
+                int newCode = snapshot.getValue(Integer.class);
+                if (!currentCircleCode.equals(String.valueOf(newCode))) {
+                    Log.d(TAG, "User circle code changed.");
+                    switchCircle(String.valueOf(newCode));
+                    // reset the circle (reset the data)
+                    resetCircle();
+                    // and re-initialize the circle.
+                    retrieveCircleMemberUid();
+                    // while we're reintializing the circle, wait for 3 seconds, and then trigger the oncirclechange method
+                    new Handler().postDelayed(() -> {
+                        for (CircleUtilListener listener : listeners){
+                            listener.onCircleChange();
+                        }
+                    }, THREE_SECONDS);
+                }
+            }
+            @Override
+            public void onCancelled(@NonNull DatabaseError error) {  }
+        });
         // Check if the circle that the user is currently in is having any changes.
         databaseReference.child("Circles").child(currentCircleCode).addChildEventListener(new ChildEventListener() {
             @Override
