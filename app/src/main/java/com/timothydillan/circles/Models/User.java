@@ -63,7 +63,7 @@ public class User {
     }
 
     public String getToken() {
-        return type;
+        return token;
     }
 
     public void setToken(String token) {
