@@ -186,6 +186,8 @@ public class SettingsFragment extends Fragment implements CircleUtil.CircleUtilL
                             // and update the user's current circle session remotely and locally.
                             userUtil.updateDbUserCurrentCircle(currentUser.getMyCircle());
                             currentUser.setCurrentCircleSession(currentUser.getMyCircle());
+
+                            CircleUtil.resetCircle();
                             // We'll then go back to MainActivity.
                             Intent mainIntent = new Intent(requireContext(), MainActivity.class);
                             mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);

@@ -220,11 +220,9 @@ public class CircleUtil {
                                     if (task.isSuccessful()) {
                                         Log.d(TAG, "Successfully joined the circle.");
                                         switchCircle(circleCode);
-
-
                                         // and trigger the listener.
                                         for (CircleUtilListener listener : listeners){
-                                            listener.onJoinCircle(false);
+                                            listener.onJoinCircle(true);
                                         }
                                     }
                                 });

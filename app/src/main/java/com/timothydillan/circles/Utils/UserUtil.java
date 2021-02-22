@@ -228,6 +228,7 @@ public class UserUtil {
             return;
         }
 
+        USER_UID = FirebaseUtil.getUid();
         // To initialize the circle, we must first get the current user's details. We'll go into the users node in the DB
         databaseReference.child("Users").addListenerForSingleValueEvent(new ValueEventListener() {
             @Override
