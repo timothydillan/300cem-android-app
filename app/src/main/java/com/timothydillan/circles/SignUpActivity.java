@@ -145,6 +145,15 @@ public class SignUpActivity extends ActivityInterface implements UserUtil.UsersL
             }
         }
 
+        if (password.length() < 8) {
+            passwordInput.setErrorEnabled(true);
+            passwordInput.setError("Your password needs to have at least 8 symbols.");
+            passwordInput.requestFocus();
+            return false;
+        } else {
+            passwordInput.setErrorEnabled(false);
+        }
+
         return true;
     }
 
