@@ -174,12 +174,9 @@ public class MoodUtil {
         return new String(Character.toChars(unicode));
     }
 
-    public ArrayList<User> getMemberMoodInformation(DataSnapshot snapshot) {
+    public ArrayList<User> getMemberMoodInformation(@NonNull DataSnapshot snapshot) {
         // Create an array list to store newly updated information
         ArrayList<User> newMemberInformation = new ArrayList<>();
-        if (snapshot == null) {
-            return newMemberInformation;
-        }
         // For every users in the database
         for (DataSnapshot ds : snapshot.getChildren()) {
             // and for every member in the user's current circle,
