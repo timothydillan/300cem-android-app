@@ -19,6 +19,22 @@ Due to hurried creation of the video, a technical explanation will be elaborated
 - Users are able to turn on password and biometric authentication, so that other people using the user's device won't be able to view sensitive information.
 - Users are able to pair their device with their wearables (if the wearable is using WearOS). So that the wearable is able to send data to their handheld device, users would need to first download this project, and change the configuration module to the circles_wear module, and then run the app. A video will be shown below.
 
+As the Biometric and Material design API usage have been explained in the report, the Firebase and Google Play Services API will instead be elaborated here.
+
+The Firebase APIs used are the Authentication, Database, Storage, and Messaging API. The authentication API is used to ease the authentication process by allowing users to create an account, or sign in with an account, and all the "back-end" stuff is mainly handled by Firebase.
+
+As the Database API plays an important role and is used by many of the features of the application, I'll divide the explanations so that it can explain each feature.
+
+# Sensors Used
+
+##### Heart Rate (Wearable)
+##### Pedometer (Wearable)
+##### Step Detector
+##### Pedometer
+##### Significant Motion
+##### GPS Sensor
+##### Biometric Sensor (may include Face ID, Iris, or Fingerprint)
+
 # APIs Used
 To begin, the APIs used are listed as follows:
 
@@ -34,23 +50,6 @@ To begin, the APIs used are listed as follows:
 - Location
 - Activity Recognition
 - Wearable
-
-
-# Sensors Used
-
-##### Heart Rate (Wearable)
-##### Pedometer (Wearable)
-##### Step Detector
-##### Pedometer
-##### Significant Motion
-##### GPS Sensor
-##### Biometric Sensor (may include Face ID, Iris, or Fingerprint)
-
-As the Biometric and Material design API usage have been explained in the report, the Firebase and Google Play Services API will instead be elaborated here.
-
-The Firebase APIs used are the Authentication, Database, Storage, and Messaging API. The authentication API is used to ease the authentication process by allowing users to create an account, or sign in with an account, and all the "back-end" stuff is mainly handled by Firebase.
-
-As the Database API plays an important role and is used by many of the features of the application, I'll divide the explanations so that it can explain each feature.
 
 # Location Sharing
 To conduct location sharing, the application uses the Database API to update the user's latitude and longitude in real-time. To be able to accomplish this, a fused location provider with a custom location callback listener was used. Once the location of the user is changed, the callback triggers the `onLocationResult` event, which then updates the user's location in the database. A code-by-code explanation can be seen [here](https://github.com/timothydillan/300cem-android-app/blob/main/app/src/main/java/com/timothydillan/circles/Services/LocationService.java).
