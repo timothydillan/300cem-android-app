@@ -1,5 +1,5 @@
 # circles
-![](https://github.com/timothydillan/300cem-android-app/blob/main/app/src/main/res/drawable-hdpi/logo.png)
+![](https://github.com/timothydillan/300cem-android-app/blob/main/app/src/main/res/drawable-mdpi/logo.png)
 
 ### Background
 Due to hurried creation of the video, a technical explanation will be elaborated below to highlight some of the features that were not mentioned in the video.
