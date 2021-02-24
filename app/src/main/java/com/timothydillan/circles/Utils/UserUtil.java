@@ -655,9 +655,7 @@ public class UserUtil {
         HealthUtil.removeInstance();
         LocationUtil.resetMap();
         CircleUtil.getInstance().reset();
-        CircleUtil.removeInstance();
         FirebaseUtil.deleteAccount();
-        instance = null;
     }
 
     public interface UsersListener {

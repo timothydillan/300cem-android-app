@@ -213,6 +213,10 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
         locationUtil.initializeMarkers(members);
         userUtil.registerListener(MapsFragment.this);
         setUpCircleSpinner();
+        // When the markers have been initialized,
+        LatLng memberPosition = new LatLng(UserUtil.getInstance().getCurrentUser().getLatitude(), UserUtil.getInstance().getCurrentUser().getLongitude());
+        // move the map to the position of the current member's marker.
+        mMap.animateCamera(CameraUpdateFactory.newLatLngZoom(memberPosition, 16.0f));
     }
 
     @Override

@@ -254,9 +254,6 @@ public class SettingsFragment extends Fragment implements CircleUtil.CircleUtilL
     }
 
     private void signOut() {
-        // We need to unregister the listener before we remove the CircleUtil instance.
-        CircleUtil.getInstance().unregisterListener(this);
-
         // Stop all services.
         requireContext().stopService(new Intent(requireContext(), LocationService.class));
         requireContext().stopService(new Intent(requireContext(), CrashService.class));
@@ -269,17 +266,12 @@ public class SettingsFragment extends Fragment implements CircleUtil.CircleUtilL
         userUtil.reset();
         circleUtil.reset();
         LocationUtil.resetMap();
-        CircleUtil.removeInstance();
-        UserUtil.removeInstance();
 
         // Redirect back to Sign up activity.
         goToSignUpActivity();
     }
 
     private void deleteAccount() {
-        // We need to unregister the listener before we remove the CircleUtil instance.
-        CircleUtil.getInstance().unregisterListener(this);
-        
         // Stop all services.
         requireContext().stopService(new Intent(requireContext(), LocationService.class));
         requireContext().stopService(new Intent(requireContext(), CrashService.class));

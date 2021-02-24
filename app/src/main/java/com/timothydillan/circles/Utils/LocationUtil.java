@@ -143,9 +143,6 @@ public class LocationUtil {
             membersLocation.put(circleMember, memberMarker);
         }
 
-        // We'll also animate/move the camera to the current user with a zoom of 15
-        map.animateCamera(CameraUpdateFactory.newLatLngZoom(membersLocation.get(UserUtil.getInstance().getCurrentUser()).getPosition(), 15.0f));
-
         // after we're done with adding each marker, we should try and update the avatar of the user to their profile picture.
         updateAvatars();
     }
