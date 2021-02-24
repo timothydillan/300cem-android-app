@@ -36,6 +36,7 @@ public class User {
         this.lastName = lastName;
         this.email = email;
         this.phone = phone;
+        this.lastSharingTime = getCurrentDayAndTime();
     }
 
     public User(String uid, String firstName, String lastName, String email, String phone, int currentCircleSession, String token) {
