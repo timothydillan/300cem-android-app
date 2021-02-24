@@ -45,7 +45,17 @@ To begin, the APIs used are listed as follows:
 - Activity Recognition
 - Wearable
 
-*The auth api won't be elaborated here, so a short explanation for it is that it is used to ease the authentication process by allowing users to create an account, or sign in with an account, and all the "back-end" stuff is mainly handled by Firebase. 
+*The auth api won't be elaborated here, so a short explanation for it is that it is used to ease the authentication process by allowing users to create an account, or sign in with an account, and all the "back-end" stuff is mainly handled by Firebase.*
+
+# Videos
+### Phone
+https://streamable.com/ofefeq
+https://streamable.com/oi1szt
+https://streamable.com/8ni5mk
+
+### Wearable
+https://streamable.com/bxmc91
+https://streamable.com/qwk7ay
 
 # Location Sharing
 To conduct location sharing, the application uses the Database API to update the user's latitude and longitude in real-time. To be able to accomplish this, a fused location provider with a custom location callback listener was used. Once the location of the user is changed, the callback triggers the `onLocationResult` event, which then updates the user's location in the database. A code-by-code explanation can be seen [here](https://github.com/timothydillan/300cem-android-app/blob/main/app/src/main/java/com/timothydillan/circles/Services/LocationService.java).
