@@ -13,6 +13,7 @@ import android.hardware.SensorManager;
 import android.os.Build;
 import android.os.VibrationEffect;
 import android.os.Vibrator;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -76,15 +77,13 @@ public class CrashService extends Services implements CrashListener.OnCrashListe
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // If the stop button was clicked,
-        if (intent.getAction() != null) {
-            if (intent.getAction().equals(STOP_SERVICE)) {
-                // Remove the configuration data from the sharedpreferences
-                SharedPreferencesUtil sharedPreferencesUtil = new SharedPreferencesUtil(this);
-                sharedPreferencesUtil.removeItem(SharedPreferencesUtil.CRASH_KEY);
-                // and remove the notification and stop the service.
-                stopForeground(true);
-                stopSelf();
-            }
+        if (TextUtils.equals(STOP_SERVICE, intent.getAction())) {
+            // Remove the configuration data from the sharedpreferences
+            SharedPreferencesUtil sharedPreferencesUtil = new SharedPreferencesUtil(this);
+            sharedPreferencesUtil.removeItem(SharedPreferencesUtil.CRASH_KEY);
+            // and remove the notification and stop the service.
+            stopForeground(true);
+            stopSelf();
         }
 
         // if the fit permissions have been granted,

@@ -42,6 +42,12 @@ public class CircleUtil {
         return instance;
     }
 
+    public static void removeInstance() {
+        if (instance != null) {
+            instance = null;
+        }
+    }
+
     public void registerListener(CircleUtilListener listener) {
         if (!listeners.contains(listener)) {
             listeners.add(listener);
@@ -50,7 +56,7 @@ public class CircleUtil {
     }
 
     public void unregisterListener(CircleUtilListener listener){
-        if (listener != null && listeners.contains(listener)){
+        if (listener != null) {
             listeners.remove(listener);
         }
     }

@@ -8,6 +8,7 @@ import android.app.PendingIntent;
 import android.content.Context;
 import android.content.Intent;
 import android.os.Build;
+import android.text.TextUtils;
 import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
@@ -36,12 +37,10 @@ public class WearableService extends WearableListenerService {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // If the stop button was clicked,
-        if (intent.getAction() != null) {
-            if (intent.getAction().equals(STOP_SERVICE)) {
-                // we'll remove the notification and stop the service.
-                stopForeground(true);
-                stopSelf();
-            }
+        if (TextUtils.equals(STOP_SERVICE, intent.getAction())) {
+            // we'll remove the notification and stop the service.
+            stopForeground(true);
+            stopSelf();
         }
         /* We'll create two intents, one allowing the user to navigate to the Health fragment, and one stopping the service. */
         Intent healthIntent = new Intent(this, MainActivity.class);

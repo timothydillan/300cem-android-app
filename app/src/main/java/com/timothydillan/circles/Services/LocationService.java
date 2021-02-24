@@ -11,6 +11,7 @@ import android.content.Intent;
 import android.location.Location;
 import android.os.Build;
 import android.os.Looper;
+import android.text.TextUtils;
 import android.util.Log;
 
 
@@ -49,13 +50,12 @@ public class LocationService extends Services {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId) {
         // If the stop button was clicked,
-        if (intent.getAction() != null) {
-            if (intent.getAction().equals(STOP_SERVICE)) {
-                // we'll remove the notification and stop the service.
-                stopForeground(true);
-                stopSelf();
-            }
+        if (TextUtils.equals(STOP_SERVICE, intent.getAction())) {
+            // we'll remove the notification and stop the service.
+            stopForeground(true);
+            stopSelf();
         }
+
         // We'll create a location provider that will be used to request location updates,
         locationProvider = LocationServices.getFusedLocationProviderClient(this);
         // and a location callback instance that listens to locatino changes

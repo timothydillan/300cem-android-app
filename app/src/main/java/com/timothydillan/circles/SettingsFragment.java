@@ -30,7 +30,9 @@ import com.timothydillan.circles.Services.LocationService;
 import com.timothydillan.circles.Services.WearableService;
 import com.timothydillan.circles.Utils.CircleUtil;
 import com.timothydillan.circles.Utils.FirebaseUtil;
+import com.timothydillan.circles.Utils.HealthUtil;
 import com.timothydillan.circles.Utils.LocationUtil;
+import com.timothydillan.circles.Utils.MoodUtil;
 import com.timothydillan.circles.Utils.PermissionUtil;
 import com.timothydillan.circles.Utils.SharedPreferencesUtil;
 import com.timothydillan.circles.Utils.UserUtil;
@@ -259,9 +261,13 @@ public class SettingsFragment extends Fragment implements CircleUtil.CircleUtilL
 
         // Reset all variables.
         FirebaseUtil.signOut();
+        MoodUtil.removeInstance();
+        HealthUtil.removeInstance();
         userUtil.reset();
         circleUtil.reset();
         LocationUtil.resetMap();
+        CircleUtil.removeInstance();
+        UserUtil.removeInstance();
 
         // Redirect back to Sign up activity.
         goToSignUpActivity();

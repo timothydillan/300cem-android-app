@@ -48,6 +48,12 @@ public class HealthUtil {
         return instance;
     }
 
+    public static void removeInstance() {
+        if (instance != null) {
+            instance = null;
+        }
+    }
+
     public void initializeContext(Context ctx) {
         wearableUtil = new WearableUtil(ctx);
     }

@@ -64,6 +64,12 @@ public class UserUtil {
         return instance;
     }
 
+    public static void removeInstance() {
+        if (instance != null) {
+            instance = null;
+        }
+    }
+
     public void registerListener(UsersListener listener) {
         // To prevent duplicate listeners, we'll first check whether the listener being registered
         // has been added to the list.
@@ -645,9 +651,13 @@ public class UserUtil {
         databaseReference.child("Users").child(currentUser.getUid()).removeValue();
         // and we'll reset all stored variables that is related to the user
         reset();
-        CircleUtil.getInstance().reset();
+        MoodUtil.removeInstance();
+        HealthUtil.removeInstance();
         LocationUtil.resetMap();
+        CircleUtil.getInstance().reset();
+        CircleUtil.removeInstance();
         FirebaseUtil.deleteAccount();
+        instance = null;
     }
 
     public interface UsersListener {
