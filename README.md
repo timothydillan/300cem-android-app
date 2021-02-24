@@ -50,11 +50,14 @@ To begin, the APIs used are listed as follows:
 # Videos
 ### Phone
 https://streamable.com/ofefeq
+
 https://streamable.com/oi1szt
+
 https://streamable.com/8ni5mk
 
 ### Wearable
 https://streamable.com/bxmc91
+
 https://streamable.com/qwk7ay
 
 # Location Sharing
