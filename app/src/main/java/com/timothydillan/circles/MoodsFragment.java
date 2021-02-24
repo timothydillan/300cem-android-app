@@ -80,7 +80,9 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
 
         if (!isWatchPaired) {
             Button addMemberButton = view.findViewById(R.id.addMemberButton);
-            addMemberButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), InviteCodeActivity.class)));
+            if (addMemberButton != null) {
+                addMemberButton.setOnClickListener(v -> startActivity(new Intent(requireContext(), InviteCodeActivity.class)));
+            }
             return;
         }
 

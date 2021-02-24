@@ -20,6 +20,7 @@ import com.timothydillan.circles.Models.Item;
 import com.timothydillan.circles.Models.User;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.Random;
 
 // A combination of a Singleton (single instance, global point of access), facade, and an observer/listener class used for user-related operations.
@@ -138,6 +139,9 @@ public class UserUtil {
                         for (DataSnapshot member : id.getChildren()) {
                             if (member.getKey().equals(USER_UID)) {
                                 Log.d(TAG, "FOUND MATCH!");
+                                if (registeredCirclesCodes.contains(circle.getKey())) {
+                                    continue;
+                                }
                                 registeredCirclesCodes.add(circle.getKey());
                                 registeredCircles.addItem(circle.child("name").getValue(String.class), circle.getKey());
                             }

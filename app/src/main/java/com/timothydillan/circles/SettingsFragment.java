@@ -13,6 +13,7 @@ import androidx.recyclerview.widget.DividerItemDecoration;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -205,17 +206,19 @@ public class SettingsFragment extends Fragment implements CircleUtil.CircleUtilL
                             requireContext().stopService(new Intent(requireContext(), LocationService.class));
                             // We'll remove the user from the circle,
                             circleUtil.removeMember(currentUser.getUid());
-                            // and update the user's current circle session remotely and locally.
-                            userUtil.updateDbUserCurrentCircle(currentUser.getMyCircle());
-                            currentUser.setCurrentCircleSession(currentUser.getMyCircle());
 
-                            CircleUtil.resetCircle();
-                            // We'll then go back to MainActivity.
-                            Intent mainIntent = new Intent(requireContext(), MainActivity.class);
-                            mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
-                            startActivity(mainIntent);
-                            requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
-                            requireActivity().finish();
+                            // and update the user's current circle session remotely and locally.
+                            circleUtil.switchCircle(String.valueOf(currentUser.getMyCircle()));
+
+                            new Handler().postDelayed(() -> {
+                                // We'll then go back to MainActivity.
+                                Intent mainIntent = new Intent(requireContext(), MainActivity.class);
+                                mainIntent.setFlags(Intent.FLAG_ACTIVITY_CLEAR_TASK | Intent.FLAG_ACTIVITY_CLEAR_TOP);
+                                startActivity(mainIntent);
+                                requireActivity().overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
+                                requireActivity().finish();
+                            }, 2000);
+
                         });
                 builder.show();
             } else {

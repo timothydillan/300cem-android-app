@@ -5,6 +5,7 @@ import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Handler;
 import android.util.Log;
 import android.view.LayoutInflater;
 import android.view.View;
@@ -210,6 +211,10 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
         /* If the circle is ready (all data related to the members in the circle has been retrieved)
         *  place the markers at the appropriate places, and register the user util listener
         *  to listen for data changes in the users circle. */
+        if (!isAdded()) {
+            return;
+        }
+
         locationUtil.initializeMarkers(members);
         userUtil.registerListener(MapsFragment.this);
         setUpCircleSpinner();
@@ -272,10 +277,7 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
                 // pass the circle selected into the switch circle function.
-                if (isAdded()) {
-                    // and only switch the circle if the user currently on the map fragment.
-                    switchCircle(UserUtil.getRegisteredCircles().getItemName(position), (String) UserUtil.getRegisteredCircles().getItemValue(position));
-                }
+                switchCircle(UserUtil.getRegisteredCircles().getItemName(position), (String) UserUtil.getRegisteredCircles().getItemValue(position));
             }
             @Override
             public void onNothingSelected(AdapterView<?> parent) { }
@@ -329,12 +331,15 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
                 .setNegativeButton("No", (dialog, which) -> dialog.dismiss())
                 .setPositiveButton("Yes", (dialogInterface, i) -> {
                     // and if the user has confirmed that they want to switch, show a message
-                    Toast.makeText(requireContext(), "Switching...", Toast.LENGTH_SHORT).show();
+                    Toast.makeText(requireContext(), "Switching...", Toast.LENGTH_LONG).show();
                     // Switch the circle that the user is currently in
                     circleUtil.switchCircle(circleCode);
                     // and reset the fragment.
-                    LocationUtil.resetMap();
-                    resetFragment();
+                    // We need to give a delay of two seconds to let the CircleUtil initialize the circle members again.
+                    new Handler().postDelayed(() -> {
+                        LocationUtil.resetMap();
+                        resetFragment();
+                    }, 2000);
                 });
         builder.show();
     }
