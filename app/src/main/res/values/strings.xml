@@ -13,7 +13,7 @@
         <item>Normal</item>
         <item>Athletic</item>
     </string-array>
-    <string name="sos_title">SOS 🆘</string>
+    <string name="sos_title">SOS</string>
     <string name="share_title">Send circle code</string>
     <string name="share_message">Hey there! Join my circle on the circles. app! Here\'s my code: </string>
     <string name="circle_code_error">Error: A circle code has 6 digits.</string>

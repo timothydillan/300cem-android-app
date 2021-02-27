@@ -41,6 +41,9 @@ public class NotificationUtil {
                 DataOutputStream os = new DataOutputStream(conn.getOutputStream());
                 os.writeBytes(json.toString());
 
+                Log.d(TAG, "Return Code: " + conn.getResponseCode());
+                Log.d(TAG, "Return message: " + conn.getResponseMessage());
+
                 // and once we're done, we'll flush and close the output stream, and close the connection made.
                 os.flush();
                 os.close();
