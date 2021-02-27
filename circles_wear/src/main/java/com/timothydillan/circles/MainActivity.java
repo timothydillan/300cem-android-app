@@ -46,8 +46,6 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
     private static final String TAG = "WatchOS";
     private static final String HEART_RATE_KEY = "HEART_RATE_KEY";
     private static final String STEP_COUNT_KEY = "STEP_COUNT_KEY";
-    private static final String HEART_RATE_PATH = "/heartRate";
-    private static final String STEP_COUNT_PATH = "/stepCount";
     private static final String PREV_STEP_COUNT_KEY = "PREV_STEP_COUNT_KEY";
     private static final String PREV_STEP_COUNT_PATH = "/prevStepCount";
     private static final String WALK_TIME_KEY = "WALK_TIME_KEY";
@@ -60,6 +58,7 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
     private static final String NAME_KEY = "NAME_KEY";
     private static final String NAME_PATH = "/namePath";
     private static final String MOOD_PATH = "/moodPath";
+    private static final String HANDHELD_DATA_KEY = "HANDHELD_DATA_KEY";
     public static final int FIT_REQUEST_CODE = 101;
 
     private boolean receivedPrevStepCount = false;
@@ -71,16 +70,15 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
     private TextView walkingTextView;
     private TextView runningTextView;
     private TextView cyclingTextView;
-    private SensorManager sensorManager;
-    private Sensor heartRateSensor;
-    private Sensor stepCounterSensor;
     private int currentStepCount;
+    private long prevStepCount;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Assign views to their corresponding IDs
         welcomeTextView = findViewById(R.id.textView);
         heartRateTextView = findViewById(R.id.heartRateTextView);
         stepCountTextView = findViewById(R.id.stepsTextView);
@@ -90,21 +88,25 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
         heartEmoji = findViewById(R.id.heartEmojiTextView);
         moodTextView = findViewById(R.id.moodTextView);
 
-        ObjectAnimator scaleDown = ObjectAnimator.ofPropertyValuesHolder(heartEmoji,
+        // We'll create an animation that increases the scale of a view (0.2 more) and then goes back to their normal size
+        // this creates a pulsating effect.
+        ObjectAnimator pulsatingAnim = ObjectAnimator.ofPropertyValuesHolder(heartEmoji,
                 PropertyValuesHolder.ofFloat("scaleX", 1.2f),
                 PropertyValuesHolder.ofFloat("scaleY", 1.2f));
-        scaleDown.setDuration(300);
+        pulsatingAnim.setDuration(300);
+        pulsatingAnim.setRepeatCount(ObjectAnimator.INFINITE);
+        pulsatingAnim.setRepeatMode(ObjectAnimator.REVERSE);
+        pulsatingAnim.start();
 
-        scaleDown.setRepeatCount(ObjectAnimator.INFINITE);
-        scaleDown.setRepeatMode(ObjectAnimator.REVERSE);
-        scaleDown.start();
-
+        // In-case the user hasn't granted us permissions, request for it
         requestFitPermissions();
 
+        // If the fit permissions have not been given yet, we'll return and do nothing.
         if (!hasFitPermissions()) {
             return;
         }
 
+        // If it has been granted, we'll run the sensor service.
         if (!SensorService.isServiceRunning(this)) {
             Intent sensorService = new Intent(this, SensorService.class);
             ContextCompat.startForegroundService(this, sensorService);
@@ -114,10 +116,14 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
     private final BroadcastReceiver broadcastReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
+            // Once we receive data from the service, we'll check whether the received data is more than 0
             if (intent.getIntExtra(HEART_RATE_KEY, 0) > 0) {
+                // if it is, then we'll set the value of the UI elements accordingly
                 int newHeartRate = intent.getIntExtra(HEART_RATE_KEY, 0);
+                // in this case, we're setting the heart rate text to the newly received value.
                 setHeartRateText(newHeartRate);
             }
+            // We're doing the same thing for the pedometer data
             if (intent.getIntExtra(STEP_COUNT_KEY, 0) > 0) {
                 currentStepCount = intent.getIntExtra(STEP_COUNT_KEY, 0);
                 setStepCountText();
@@ -128,56 +134,73 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
     @Override
     protected void onResume() {
         super.onResume();
-        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter("broadcast_action"));
+        // In-case the user goes out of the app and goes back in, we'll ask for permissions again
+        requestFitPermissions();
+        // and we'll also re-register the broadcast receiver, as well as the onDataChanged listener (from the data layer API) so that we're able
+        // to receive data from the handheld device.
+        LocalBroadcastManager.getInstance(this).registerReceiver(broadcastReceiver, new IntentFilter(HANDHELD_DATA_KEY));
         Wearable.getDataClient(this).addListener(this);
     }
 
     @Override
     protected void onPause() {
         super.onPause();
+        // When the user leaves the app, remove all listeners and receivers since the user does not need to receive any data from the companion device
         Wearable.getDataClient(this).removeListener(this);
         LocalBroadcastManager.getInstance(this).unregisterReceiver(broadcastReceiver);
     }
 
     @Override
     public void onDataChanged(@NonNull DataEventBuffer dataEventBuffer) {
+        // When we receive data,
         for (DataEvent event : dataEventBuffer) {
+            // check if a data item was sent and a new value was sent
             if (event.getType() == DataEvent.TYPE_CHANGED) {
-                // DataItem changed
                 DataItem item = event.getDataItem();
+                // and if the data sent was the previous step count of the user
                 if (item.getUri().getPath().compareTo(PREV_STEP_COUNT_PATH) == 0) {
-                    long prevStepCount = Long.parseLong(getData(item, PREV_STEP_COUNT_KEY));
+                    // Get the data,
+                    prevStepCount = Long.parseLong(getData(item, PREV_STEP_COUNT_KEY));
+                    // and set receivedPrevStepCount to true so that we deduct the current step count of the user
+                    // with the previous step count (since the step count data doesn't reset until the device is rebooted)
                     receivedPrevStepCount = true;
                     Log.d(TAG, "Yesterday step count: " + prevStepCount);
-                    setStepCountText(prevStepCount);
                 }
+                // If the walk time data was received,
                 if (item.getUri().getPath().compareTo(WALK_TIME_PATH) == 0) {
+                    // get the data, and update the corresponding text
                     String walkTime = getData(item, WALK_TIME_KEY);
                     Log.d(TAG, "User walk time: " + walkTime);
                     setWalkTimeText(walkTime);
                 }
+                // If the run time data was received
                 if (item.getUri().getPath().compareTo(RUN_TIME_PATH) == 0) {
+                    // get the data, and update the corresponding text
                     String runTime = getData(item, RUN_TIME_KEY);
                     Log.d(TAG, "User running time: " + runTime);
                     setRunTimeText(runTime);
                 }
+                // If the cycling time data was received
                 if (item.getUri().getPath().compareTo(CYCLING_TIME_PATH) == 0) {
+                    // get the data, and update the corresponding text
                     String cyclingTime = getData(item, CYCLING_TIME_KEY);
                     Log.d(TAG, "User cycling time: " + cyclingTime);
                     setCyclingTimeText(cyclingTime);
                 }
+                // If the mood data was received
                 if (item.getUri().getPath().compareTo(MOOD_PATH) == 0) {
+                    // get the data, and update the corresponding text
                     String mood = getData(item, MOOD_KEY);
                     Log.d(TAG, "User mood: " + mood);
                     setMoodText(mood);
                 }
+                // If the user's name data was received
                 if (item.getUri().getPath().compareTo(NAME_PATH) == 0) {
+                    // get the data, and update the corresponding text
                     String name = getData(item, NAME_KEY);
                     Log.d(TAG, "Username: " + name);
                     setWelcomeTextView(name);
                 }
-            } else if (event.getType() == DataEvent.TYPE_DELETED) {
-                // DataItem deleted
             }
         }
     }
@@ -187,50 +210,53 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
         return dataMap.getString(key);
     }
 
-    public void setHeartRateText(int heartRate) {
+    private void setHeartRateText(int heartRate) {
         heartRateTextView.setText(heartRate + " bpm");
     }
 
-    public void setStepCountText(long prevStepCount) {
-        String actualStepCount = String.valueOf(currentStepCount - prevStepCount) + " steps";
-        stepCountTextView.setText(actualStepCount);
-    }
-
-    public void setStepCountText() {
+    private void setStepCountText() {
         if (!receivedPrevStepCount && stepCountTextView != null) {
-            stepCountTextView.setText(String.valueOf(currentStepCount) + " steps");
+            stepCountTextView.setText(currentStepCount + " steps");
+        } else if (stepCountTextView != null) {
+            String actualStepCount = (currentStepCount - prevStepCount) + " steps";
+            stepCountTextView.setText(actualStepCount);
         }
     }
 
-    public void setWalkTimeText(String walkTime) {
+    private void setWalkTimeText(String walkTime) {
         walkingTextView.setText(walkTime);
     }
 
-    public void setRunTimeText(String runTime) {
+    private void setRunTimeText(String runTime) {
         runningTextView.setText(runTime);
     }
 
-    public void setCyclingTimeText(String cyclingTime) {
+    private void setCyclingTimeText(String cyclingTime) {
         cyclingTextView.setText(cyclingTime);
     }
 
-    public void setMoodText(String mood) {
+    private void setMoodText(String mood) {
         moodTextView.setTextSize(30);
         moodTextView.setText(mood);
     }
 
-    public void setWelcomeTextView(String name) {
+    private void setWelcomeTextView(String name) {
         welcomeTextView.setTypeface(ResourcesCompat.getFont(this, R.font.dmsans_bold));
         welcomeTextView.setText("Welcome Back, " + name + ".");
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
-    public void requestFitPermissions() {
+    private void requestFitPermissions() {
         if (hasFitPermissions()) {
             return;
         }
-        ActivityCompat.requestPermissions((Activity)this, new String[]
+        if (ActivityCompat.shouldShowRequestPermissionRationale(this, Manifest.permission.BODY_SENSORS)) {
+            showPermissionsDialog();
+        } else {
+            ActivityCompat.requestPermissions(this, new String[]
                     {Manifest.permission.BODY_SENSORS}, FIT_REQUEST_CODE);
+        }
+
     }
 
     @Override
@@ -244,23 +270,22 @@ public class MainActivity extends Activity implements DataClient.OnDataChangedLi
                 } else {
                     // If somehow one of the permissions are denied, show a permission dialog.
                     Log.d("PermissionsRequest", permissions[i] + " denied.");
-                    showPermissionsDialog(permissions[i]);
                 }
             }
-            // If everything goes well, reset the map, and "restart" the fragment.
+            // Reset the activity nonetheless
             recreate();
         }
     }
 
     @RequiresApi(api = Build.VERSION_CODES.KITKAT_WATCH)
-    public boolean hasFitPermissions() {
+    private boolean hasFitPermissions() {
         return ContextCompat.checkSelfPermission(this, Manifest.permission.BODY_SENSORS) == PackageManager.PERMISSION_GRANTED;
     }
 
-    public void showPermissionsDialog(String permission) {
-        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this, R.style.Theme_AppCompat_DayNight_Dialog);
+    private void showPermissionsDialog() {
+        MaterialAlertDialogBuilder builder = new MaterialAlertDialogBuilder(this);
         builder.setTitle("Circles Permissions")
-                .setMessage("This app needs access to " + permission + " for it to function properly.")
+                .setMessage("This app needs access to read your sensor data for it to function properly.")
                 .setNegativeButton("CANCEL", (dialog, which) -> Toast.makeText(this,
                         "Well.. that's a shame.", Toast.LENGTH_LONG).show())
                 .setPositiveButton("OK", (dialog, which) -> {

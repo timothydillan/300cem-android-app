@@ -28,7 +28,6 @@ public class WearableUtil {
     public static final String STEP_COUNT_KEY = "STEP_COUNT_KEY";
     public static final String HEART_RATE_PATH = "/heartRate";
     public static final String STEP_COUNT_PATH = "/stepCount";
-    public static final String ACTIVITY_KEY = "ACTIVITY_KEY";
 
     private Context context;
 

@@ -301,10 +301,12 @@ public class CircleUtil {
         // Create new circle with user's uid and him/her being an admin
         Circle newCircle = new Circle("Admin");
 
+        // If the creation of the circle was successful,
         databaseReference.child("Circles").child(String.valueOf(circleCode))
                 .child("name").setValue(circleName)
                 .addOnCompleteListener(
                 task ->
+                    // Add the current user as an admin for the new circle
                     databaseReference.child("Circles")
                             .child(String.valueOf(circleCode))
                             .child("Members")
@@ -312,8 +314,10 @@ public class CircleUtil {
                             .setValue(newCircle)
                             .addOnCompleteListener(
                             task1 -> {
+                                // and if that operation was also successful, switch the user's circle
                                 switchCircle(String.valueOf(circleCode));
-                                for (CircleUtilListener listener : listeners){
+                                for (CircleUtilListener listener : listeners) {
+                                    // and trigger the onCreateCircle event for every listener registered.
                                     listener.onCreateCircle(true);
                                 }
                             })
@@ -347,9 +351,17 @@ public class CircleUtil {
                 .child("name")
                 .setValue(circleName)
                 .addOnCompleteListener(task -> {
-                    for (CircleUtilListener listener : listeners) {
-                        listener.onEditCircleName(task.isSuccessful());
-                    }
+                    // Once we have successfully edited the circle name,
+                    // reinitialize the circle and the circle name
+                    userUtil.reinitializeRegisteredCircles();
+                    FirebaseUtil.initializeCircleName();
+                    new Handler().postDelayed(() -> {
+                        // and then trigger the editcirclename event after 1.5 seconds.
+                        for (CircleUtilListener listener : listeners) {
+                            listener.onEditCircleName(task.isSuccessful());
+                        }
+                    }, 1500);
+
                 });
     }
 

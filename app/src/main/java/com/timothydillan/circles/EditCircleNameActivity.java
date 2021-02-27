@@ -57,6 +57,15 @@ public class EditCircleNameActivity extends AppCompatActivity implements CircleU
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        /* If the user goes out of the health fragment and goes back in again,
+         * we'll re-register the listener here, so that the user can get the appropriate indicator
+         * whether they have successfully edited their circle name .*/
+        circleUtil.registerListener(this);
+    }
+
+    @Override
     protected void onPause() {
         super.onPause();
         // Unregister the circle when the user leaves the join circle activity.

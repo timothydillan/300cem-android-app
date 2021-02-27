@@ -10,10 +10,10 @@ import java.util.concurrent.TimeUnit;
 
 public class CrashListener implements SensorEventListener {
 
-    private SensorManager sensorManager;
     private static final String TAG = "CrashListener";
-    private static final int SPEED_THRESHOLD = 15000;
+    private static final int SPEED_THRESHOLD = 10000;
     private static final int TIME_THRESHOLD = 70;
+    private SensorManager sensorManager;
     private OnCrashListener crashListener;
     private float lastX = -1.0f;
     private float lastY = -1.0f;
@@ -33,7 +33,6 @@ public class CrashListener implements SensorEventListener {
     @Override
     public void onSensorChanged(SensorEvent event) {
         long now = System.currentTimeMillis();
-
         // https://stackoverflow.com/questions/5271448/how-to-detect-shake-event-with-android
         // For every 70 ms,
         if (now - lastTime > TIME_THRESHOLD) {
@@ -50,7 +49,6 @@ public class CrashListener implements SensorEventListener {
                 Log.d(TAG, "Acceleration force applied to the exceeds the speed threshold");
                 crashListener.onCrash();
             }
-
             lastTime = now;
             lastX = event.values[0];
             lastY = event.values[1];

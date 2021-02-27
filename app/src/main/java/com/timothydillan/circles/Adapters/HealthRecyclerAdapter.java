@@ -65,15 +65,16 @@ public class HealthRecyclerAdapter extends RecyclerView.Adapter<HealthRecyclerAd
             runningTime = v.findViewById(R.id.runningTimeTextView);
             cyclingTime = v.findViewById(R.id.cyclingTimeTextView);
             memberImage.setDefaultImageResId(R.drawable.logo);
-            ObjectAnimator scaleDown = ObjectAnimator.ofPropertyValuesHolder(heartEmoji,
+
+            ObjectAnimator pulsatingAnim = ObjectAnimator.ofPropertyValuesHolder(heartEmoji,
                     PropertyValuesHolder.ofFloat("scaleX", 1.2f),
                     PropertyValuesHolder.ofFloat("scaleY", 1.2f));
-            scaleDown.setDuration(300);
 
-            scaleDown.setRepeatCount(ObjectAnimator.INFINITE);
-            scaleDown.setRepeatMode(ObjectAnimator.REVERSE);
+            pulsatingAnim.setDuration(300);
+            pulsatingAnim.setRepeatCount(ObjectAnimator.INFINITE);
+            pulsatingAnim.setRepeatMode(ObjectAnimator.REVERSE);
+            pulsatingAnim.start();
 
-            scaleDown.start();
             v.setOnClickListener(this);
         }
 
