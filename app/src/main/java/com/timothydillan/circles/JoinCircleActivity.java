@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.appcompat.widget.Toolbar;
 
 import android.os.Bundle;
+import android.os.IBinder;
 import android.util.Log;
 import android.view.MenuItem;
 import android.view.View;
@@ -72,8 +73,9 @@ public class JoinCircleActivity extends ActivityInterface implements CircleUtil.
     public void onJoinButtonClick(View v) {
         // Hide the keyboard
         InputMethodManager imm = (InputMethodManager) getSystemService(INPUT_METHOD_SERVICE);
-        if (imm != null) {
-            imm.hideSoftInputFromWindow(getCurrentFocus().getWindowToken(), 0);
+        IBinder windowToken = getCurrentFocus().getWindowToken();
+        if (windowToken != null) {
+            imm.hideSoftInputFromWindow(windowToken, 0);
         }
 
         // If the user clicked the join button, get the circle code on the edit text,
