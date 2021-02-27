@@ -137,7 +137,9 @@ public class CrashConfirmationActivity extends AppCompatActivity {
         // For every user token in every circle that the user is in
         for (String token : UserUtil.getAllTokens()) {
             // send a help notification to each of them.
-            NotificationUtil.sendNotification(getResources().getString(R.string.sos_title), notificationMessage, token);
+            if (!token.equals(UserUtil.getInstance().getCurrentUser().getToken())) {
+                NotificationUtil.sendNotification(getResources().getString(R.string.sos_title), notificationMessage, token);
+            }
         }
     }
 }
