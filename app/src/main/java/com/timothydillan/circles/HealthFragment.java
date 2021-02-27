@@ -244,7 +244,7 @@ public class HealthFragment extends Fragment implements UserUtil.UsersListener, 
 
     private void resetFragment() {
         if (isAdded()) {
-            getParentFragmentManager().beginTransaction().detach(this).attach(this).commit();
+            getParentFragmentManager().beginTransaction().detach(this).attach(this).commitAllowingStateLoss();
         }
     }
 }

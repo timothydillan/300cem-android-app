@@ -307,7 +307,7 @@ public class MapsFragment extends Fragment implements GoogleMap.OnInfoWindowClic
 
     private void resetFragment() {
         if (isAdded()) {
-            getParentFragmentManager().beginTransaction().detach(this).attach(this).commit();
+            getParentFragmentManager().beginTransaction().detach(this).attach(this).commitAllowingStateLoss();
         }
     }
 

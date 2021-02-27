@@ -177,7 +177,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
 
     private void resetFragment() {
         if (isAdded()) {
-            getParentFragmentManager().beginTransaction().detach(this).attach(this).commit();
+            getParentFragmentManager().beginTransaction().detach(this).attach(this).commitAllowingStateLoss();
         }
     }
 }
