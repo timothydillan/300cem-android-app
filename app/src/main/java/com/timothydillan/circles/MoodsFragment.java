@@ -59,7 +59,7 @@ public class MoodsFragment extends Fragment implements UserUtil.UsersListener, C
                              Bundle savedInstanceState) {
         View view = inflater.inflate(R.layout.fragment_moods, container, false);
         // First check whether the user has already paired a wearable and has already granted fit permissions
-        if ((permissionUtil.hasWatchApp() && permissionUtil.hasFitPermissions() && !moodUtil.getMemberMoodInformation().isEmpty()) || receivedData) {
+        if ((permissionUtil.hasWatchApp() && permissionUtil.hasFitPermissions()) || receivedData || !moodUtil.getMemberMoodInformation().isEmpty()) {
             // If the check above passes, check if the wearable service is running.
             if (!WearableService.isServiceRunning(requireContext())) {
                 // if it isn't then start the service.
